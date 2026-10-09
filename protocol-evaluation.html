@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DeFi Protocol Evaluation Checklist</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f9f9f9;
+      color: #1a1a1a;
+      line-height: 1.6;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #0f0f0f;
+        color: #e0e0e0;
+      }
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 0.5rem;
+      color: #1a1a1a;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      h1 {
+        color: #e0e0e0;
+      }
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 2rem;
+      font-size: 14px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .subtitle {
+        color: #999;
+      }
+    }
+
+    .protocol-input {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 2rem;
+    }
+
+    input {
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: #fff;
+      color: #1a1a1a;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      input {
+        background: #1a1a1a;
+        border-color: #333;
+        color: #e0e0e0;
+      }
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #378ADD;
+      box-shadow: 0 0 0 3px rgba(55, 138, 221, 0.1);
+    }
+
+    .section {
+      margin-bottom: 2rem;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: #1a1a1a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .section-title {
+        color: #e0e0e0;
+      }
+    }
+
+    .score-badge {
+      display: inline-block;
+      background: #378ADD;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .score-badge.low {
+      background: #059669;
+    }
+
+    .score-badge.medium {
+      background: #d97706;
+    }
+
+    .score-badge.high {
+      background: #dc2626;
+    }
+
+    .checklist-item {
+      background: #fff;
+      padding: 12px 16px;
+      border-radius: 6px;
+      border: 1px solid #e0e0e0;
+      margin-bottom: 8px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .checklist-item {
+        background: #1a1a1a;
+        border-color: #333;
+      }
+    }
+
+    .checklist-item input[type="checkbox"] {
+      margin-top: 3px;
+      cursor: pointer;
+    }
+
+    .item-content {
+      flex: 1;
+    }
+
+    .item-label {
+      font-weight: 500;
+      color: #1a1a1a;
+      display: block;
+      margin-bottom: 4px;
+      cursor: pointer;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .item-label {
+        color: #e0e0e0;
+      }
+    }
+
+    .item-description {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 6px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .item-description {
+        color: #999;
+      }
+    }
+
+    .item-weight {
+      font-size: 11px;
+      background: #f0f0f0;
+      padding: 2px 6px;
+      border-radius: 3px;
+      display: inline-block;
+      color: #666;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .item-weight {
+        background: #2a2a2a;
+        color: #999;
+      }
+    }
+
+    .risk-level {
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      margin-bottom: 2rem;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .risk-level {
+        border-color: #333;
+      }
+    }
+
+    .risk-level.safe {
+      background: #ecfdf5;
+      border-color: #059669;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .risk-level.safe {
+        background: #1a3a2a;
+      }
+    }
+
+    .risk-level.caution {
+      background: #fffbeb;
+      border-color: #d97706;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .risk-level.caution {
+        background: #3a3220;
+      }
+    }
+
+    .risk-level.danger {
+      background: #fef2f2;
+      border-color: #dc2626;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .risk-level.danger {
+        background: #3a1a1a;
+      }
+    }
+
+    .risk-title {
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+
+    .risk-text {
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .results {
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      margin-top: 2rem;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .results {
+        background: #1a1a1a;
+        border-color: #333;
+      }
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+
+    .result-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .result-label {
+      color: #666;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .result-label {
+        color: #999;
+      }
+    }
+
+    .result-value {
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .result-value {
+        color: #e0e0e0;
+      }
+    }
+
+    .recommendation {
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 1rem;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .recommendation.pass {
+      background: #ecfdf5;
+      border-left: 4px solid #059669;
+      color: #065f46;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .recommendation.pass {
+        background: #1a3a2a;
+        color: #86efac;
+      }
+    }
+
+    .recommendation.caution {
+      background: #fffbeb;
+      border-left: 4px solid #d97706;
+      color: #78350f;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .recommendation.caution {
+        background: #3a3220;
+        color: #fcd34d;
+      }
+    }
+
+    .recommendation.fail {
+      background: #fef2f2;
+      border-left: 4px solid #dc2626;
+      color: #7f1d1d;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .recommendation.fail {
+        background: #3a1a1a;
+        color: #fca5a5;
+      }
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #378ADD;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    button:hover {
+      background: #2a6ab3;
+    }
+
+    .reset-btn {
+      background: #999;
+      margin-left: 8px;
+    }
+
+    .reset-btn:hover {
+      background: #777;
+    }
+
+    @media (max-width: 640px) {
+      .protocol-input {
+        grid-template-columns: 1fr;
+      }
+
+      .checklist-item {
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>DeFi Protocol Evaluation</h1>
+    <p class="subtitle">Assess whether a protocol is safe to invest in. Answer honestly for accurate results.</p>
+
+    <div class="protocol-input">
+      <input type="text" id="protocolName" placeholder="Protocol name (e.g., Aave, Curve)">
+      <input type="text" id="tokenName" placeholder="Token name (e.g., USDC, ETH)">
+    </div>
+
+    <div class="section">
+      <div class="section-title">Safety & Track Record</div>
+
+      <label class="checklist-item">
+        <input type="checkbox" data-section="safety" data-weight="3">
+        <div class="item-content">
+          <span class="item-label">Protocol has been live for 2+ years</span>
+          <span class="item-description">Protocols that survive bear markets have proven resilience</span>
+          <span class="item-weight">Weight: 3x (Critical)</span>
+        </div>
+      </label>
+
+      <label class="checklist-item">
+        <input type="checkbox" data-section="safety" data-weight="3">
+        <div class="item-content">
+          <span class="item-label">Protocol has been audited by major firms</span>
+          <span class="item-description">Look for OpenZeppelin, Trail of Bits, ConsenSys, or Certora audits</span>
+          <span class="item-weight">Weight: 3x (Critical)</span>
+        </div>
+      </label>
+
+      <label class="checklist-item">
+        <input type="checkbox" data-section="safety" data-weight="3">
+        <div class="item-content">
+          <span class="item-label">No major hacks or exploits in past 2 years</span>
+          <span class="item-description">Check DeFi Pulse and Rekt.news for incident history</span>
+          <span class="item-weight">Weight: 3x (Critical)</span>
+        </div>
+      </label>
+
+      <label class="checklist-item">
+        <input type="checkbox" data-section="safety" data-weight="2">
+        <div class="item-content">
+          <span class="item-label">Team has shipped products before</span>
+          <span class="item-description">Not their first rodeo; prior successful projects</span>
+          <span class="item-weight">Weight: 2x (High)</span>
+        </div>
+      </label>
+
+      <label class="checklist-item">
+        <input type="checkbox" data-section="safety" data-weight="2">
+        <div class="item-content">
+          <span class="item-label">Protocol has institutional backing</span>
+          <span class="item-description">Funded by reputable VCs (Paradigm, a16z, Sequoia, etc.)</span>
+          <span class="item-weight">Weight: 2x (High)</span>
+        </div>
+      </label>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Economics & Sustainability</div>
+
+      <label class="checklist-item">
+        <input type="checkbox" data-section="economics" data-weight="3">
+        <div class="item-content">
+          <span class="item-label">APY is between 2-20% (not >100%)</span>
+          <span class="item-description">High yields signal unsustainable incentive structure</span>
+          <span class="item-weight">Weight: 3x (Critical)</span>
+        </div>
+      </label>
+
+      <label class="checklist-item">
+        <input type="checkbox" data-section="economics" data-weight="2">
+        <div class="item-content">
+          <span class="item-label">Protocol profits from transaction fees (not just token emissions)</span>
+          <span class="item-description">Protocol should generate revenue independently</span>
+          <span class="item-weight">Weight: 2x (High)</span>
+        </div>
+      </label>
+
+      <label class="checklist-item">
+        <input type="checkbox" data-section="economics" data-weight="2">
+        <div class="item-content">
+          <span class="item-label">TVL (Total Value Locked) has been stable or growing</span>
+          <span class="item-description">Declining TVL = users leaving = red flag</span>
+          <span class="item-weight">Weight: 2x (High)</span>
+        </div>
+      </label>
+
+      <label class="checklist-item">
+        <input type="checkbox" data-section="economics" data-weight="2">
+        <div class="item-content">
+          <span class="item-label">Token emissions are decreasing or have ended</span>
+          <span class="item-description">Infinite token printing = price collapse (eventually)</span>
+          <span class="item-weight">Weight: 2x (High)</span>
+        </div>
+      </label>
+
+      <label class="checklist-item">
+        <input type="checkbox" data-section="economics" data-weight="1">
+        <div class="item-content">
+          <span class="item-label">Protocol is profitable (revenue > token emissions)</span>
+          <span class="item-description">Sustainable economics = long-term survival</span>
+          <span class="item-weight">Weight: 1x (Medium)</span>
+        </div>
+      </label>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Risk Assessment</div>
+
+      <label class="checklist-item">
+        <input type="checkbox" data-section="risk" data-weight="3">
+        <div class="item-content">
+          <span class="item-label">Smart contract code is well-tested and public</span>
+          <span class="item-description">Code should be open source on GitHub; ask for audit reports</span>
+          <span class="item-weight">Weight: 3x (Critical)</span>
+        </div>
+      </label>
+
+      <label class="checklist-item">
+        <input type="checkbox" data-section="risk" data-weight="2">
+        <div class="item-content">
+          <span class="item-label">Protocol has insurance or coverage for hacks</span>
+          <span class="item-description">Nexus Mutual, Balancer, or in-house insurance fund</span>
+          <span class="item-weight">Weight: 2x (High)</span>
+        </div>
+      </label>
+
+      <label class="checklist-item">
+        <input type="checkbox" data-section="risk" data-weight="2">
+        <div class="item-content">
+          <span class="item-label">No excessive leverage or flashloan attack vectors</span>
+          <span class="item-description">Liquidation cascade risk should be minimal</span>
+          <span class="item-weight">Weight: 2x (High)</span>
+        </div>
+      </label>
+
+      <label class="checklist-item">
+        <input type="checkbox" data-section="risk" data-weight="1">
+        <div class="item-content">
+          <span class="item-label">Team is doxxed (publicly known identities)</span>
+          <span class="item-description">Anonymous teams = higher scam risk</span>
+          <span class="item-weight">Weight: 1x (Medium)</span>
+        </div>
+      </label>
+
+      <label class="checklist-item">
+        <input type="checkbox" data-section="risk" data-weight="1">
+        <div class="item-content">
+          <span class="item-label">Protocol governance is decentralized (or on roadmap)</span>
+          <span class="item-description">Avoid protocols where one person controls everything</span>
+          <span class="item-weight">Weight: 1x (Medium)</span>
+        </div>
+      </label>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Market Position</div>
+
+      <label class="checklist-item">
+        <input type="checkbox" data-section="market" data-weight="2">
+        <div class="item-content">
+          <span class="item-label">Protocol is #1 or #2 in its category</span>
+          <span class="item-description">Aave (lending), Curve (stablecoin swaps), Lido (staking)</span>
+          <span class="item-weight">Weight: 2x (High)</span>
+        </div>
+      </label>
+
+      <label class="checklist-item">
+        <input type="checkbox" data-section="market" data-weight="1">
+        <div class="item-content">
+          <span class="item-label">Protocol token is trading on major exchanges</span>
+          <span class="item-description">Coinbase, Kraken, Binance = legitimacy signal</span>
+          <span class="item-weight">Weight: 1x (Medium)</span>
+        </div>
+      </label>
+
+      <label class="checklist-item">
+        <input type="checkbox" data-section="market" data-weight="1">
+        <div class="item-content">
+          <span class="item-label">Community engagement is active (not hype-driven)</span>
+          <span class="item-description">Discord/Twitter should focus on tech, not price speculation</span>
+          <span class="item-weight">Weight: 1x (Medium)</span>
+        </div>
+      </label>
+    </div>
+
+    <button onclick="calculateScore()">Calculate Risk Score</button>
+    <button class="reset-btn" onclick="resetForm()">Reset</button>
+
+    <div id="results" style="display: none;">
+      <div id="riskLevel"></div>
+      <div class="results">
+        <div class="result-row">
+          <span class="result-label">Protocol Name</span>
+          <span class="result-value" id="resultName">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Overall Score</span>
+          <span class="result-value" id="resultScore">0/100</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Safety Checks</span>
+          <span class="result-value" id="resultSafety">0/14</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Economic Checks</span>
+          <span class="result-value" id="resultEconomics">0/9</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Risk Checks</span>
+          <span class="result-value" id="resultRisk">0/9</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Market Checks</span>
+          <span class="result-value" id="resultMarket">0/5</span>
+        </div>
+        <div id="recommendation"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function calculateScore() {
+      const protocolName = document.getElementById('protocolName').value || 'Unknown Protocol';
+      const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+
+      let totalWeight = 0;
+      let checkedWeight = 0;
+      const sectionScores = { safety: { checked: 0, total: 0 }, economics: { checked: 0, total: 0 }, risk: { checked: 0, total: 0 }, market: { checked: 0, total: 0 } };
+
+      checkboxes.forEach(box => {
+        const weight = parseInt(box.dataset.weight);
+        const section = box.dataset.section;
+
+        totalWeight += weight;
+        sectionScores[section].total += weight;
+
+        if (box.checked) {
+          checkedWeight += weight;
+          sectionScores[section].checked += weight;
+        }
+      });
+
+      const score = Math.round((checkedWeight / totalWeight) * 100);
+
+      document.getElementById('resultName').textContent = protocolName;
+      document.getElementById('resultScore').textContent = `${score}/100`;
+      document.getElementById('resultSafety').textContent = `${sectionScores.safety.checked}/${sectionScores.safety.total}`;
+      document.getElementById('resultEconomics').textContent = `${sectionScores.economics.checked}/${sectionScores.economics.total}`;
+      document.getElementById('resultRisk').textContent = `${sectionScores.risk.checked}/${sectionScores.risk.total}`;
+      document.getElementById('resultMarket').textContent = `${sectionScores.market.checked}/${sectionScores.market.total}`;
+
+      let riskClass = 'safe';
+      let riskTitle = '✓ Safe to Invest';
+      let riskText = 'This protocol meets most safety criteria. Suitable for conservative portfolios.';
+      let recommendation = 'Allocate to this protocol. Monitor quarterly for changes in metrics.';
+      let recClass = 'pass';
+
+      if (score < 60) {
+        riskClass = 'danger';
+        riskTitle = '✗ High Risk - Avoid';
+        riskText = 'This protocol has significant red flags. Do not invest.';
+        recommendation = 'SKIP this protocol. Too many safety issues.';
+        recClass = 'fail';
+      } else if (score < 75) {
+        riskClass = 'caution';
+        riskTitle = '⚠ Moderate Risk - Caution';
+        riskText = 'This protocol has some positive signals but notable risks remain. Use caution.';
+        recommendation = 'Consider only if you understand the specific risks. Start with small position (5-10% of portfolio).';
+        recClass = 'caution';
+      }
+
+      const riskDiv = document.getElementById('riskLevel');
+      riskDiv.innerHTML = `
+        <div class="risk-level ${riskClass}">
+          <div class="risk-title">${riskTitle}</div>
+          <div class="risk-text">${riskText}</div>
+        </div>
+      `;
+
+      const recDiv = document.getElementById('recommendation');
+      recDiv.innerHTML = `<div class="recommendation ${recClass}"><strong>Recommendation:</strong> ${recommendation}</div>`;
+
+      document.getElementById('results').style.display = 'block';
+      document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function resetForm() {
+      document.getElementById('protocolName').value = '';
+      document.getElementById('tokenName').value = '';
+      document.querySelectorAll('input[type="checkbox"]').forEach(box => box.checked = false);
+      document.getElementById('results').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

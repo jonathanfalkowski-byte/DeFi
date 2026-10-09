@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DeFi Monthly Monitor</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f9f9f9;
+      color: #1a1a1a;
+      line-height: 1.6;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #0f0f0f;
+        color: #e0e0e0;
+      }
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 2rem;
+      font-size: 14px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .subtitle {
+        color: #999;
+      }
+    }
+
+    .input-section {
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      margin-bottom: 2rem;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .input-section {
+        background: #1a1a1a;
+        border-color: #333;
+      }
+    }
+
+    .input-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 1rem;
+    }
+
+    .input-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .input-label {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .input-label {
+        color: #999;
+      }
+    }
+
+    input {
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: #fff;
+      color: #1a1a1a;
+      font-size: 14px;
+      font-family: inherit;
+      width: 100%;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      input {
+        background: #1a1a1a;
+        border-color: #333;
+        color: #e0e0e0;
+      }
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #378ADD;
+      box-shadow: 0 0 0 3px rgba(55, 138, 221, 0.1);
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #378ADD;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    button:hover {
+      background: #2a6ab3;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 2rem 0 1rem;
+      color: #1a1a1a;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .section-title {
+        color: #e0e0e0;
+      }
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin: 1rem 0;
+    }
+
+    .metric-card {
+      background: #fff;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .metric-card {
+        background: #1a1a1a;
+        border-color: #333;
+      }
+    }
+
+    .metric-label {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .metric-label {
+        color: #999;
+      }
+    }
+
+    .metric-value {
+      font-size: 24px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .metric-value {
+        color: #e0e0e0;
+      }
+    }
+
+    .position-card {
+      background: #fff;
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      margin-bottom: 1rem;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .position-card {
+        background: #1a1a1a;
+        border-color: #333;
+      }
+    }
+
+    .position-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      align-items: center;
+    }
+
+    .position-name {
+      font-weight: 600;
+      font-size: 16px;
+      color: #1a1a1a;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .position-name {
+        color: #e0e0e0;
+      }
+    }
+
+    .allocation-bar {
+      background: #f0f0f0;
+      height: 6px;
+      border-radius: 3px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .allocation-bar {
+        background: #333;
+      }
+    }
+
+    .allocation-fill {
+      height: 100%;
+      background: #378ADD;
+    }
+
+    .position-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    .position-stat {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-label {
+      color: #666;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      font-size: 11px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .stat-label {
+        color: #999;
+      }
+    }
+
+    .stat-value {
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .stat-value {
+        color: #e0e0e0;
+      }
+    }
+
+    .checklist {
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      margin: 1rem 0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .checklist {
+        background: #1a1a1a;
+        border-color: #333;
+      }
+    }
+
+    .checklist-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .checklist-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .checklist-item input[type="checkbox"] {
+      margin-top: 4px;
+      cursor: pointer;
+    }
+
+    .checklist-label {
+      cursor: pointer;
+      color: #1a1a1a;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .checklist-label {
+        color: #e0e0e0;
+      }
+    }
+
+    .checklist-description {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .checklist-description {
+        color: #999;
+      }
+    }
+
+    .alert-box {
+      padding: 1rem;
+      border-radius: 8px;
+      border-left: 4px solid #d97706;
+      background: #fffbeb;
+      margin: 1rem 0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .alert-box {
+        background: #3a3220;
+      }
+    }
+
+    .alert-title {
+      font-weight: 600;
+      color: #78350f;
+      margin-bottom: 4px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .alert-title {
+        color: #fcd34d;
+      }
+    }
+
+    .alert-text {
+      font-size: 14px;
+      color: #92400e;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .alert-text {
+        color: #f59e0b;
+      }
+    }
+
+    .success-box {
+      padding: 1rem;
+      border-radius: 8px;
+      border-left: 4px solid #059669;
+      background: #ecfdf5;
+      margin: 1rem 0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .success-box {
+        background: #1a3a2a;
+      }
+    }
+
+    .success-title {
+      font-weight: 600;
+      color: #065f46;
+      margin-bottom: 4px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .success-title {
+        color: #86efac;
+      }
+    }
+
+    .success-text {
+      font-size: 14px;
+      color: #047857;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .success-text {
+        color: #6ee7b7;
+      }
+    }
+
+    .notes {
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      margin: 1rem 0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .notes {
+        background: #1a1a1a;
+        border-color: #333;
+      }
+    }
+
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: #fff;
+      color: #1a1a1a;
+      font-size: 13px;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      textarea {
+        background: #1a1a1a;
+        border-color: #333;
+        color: #e0e0e0;
+      }
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #378ADD;
+      box-shadow: 0 0 0 3px rgba(55, 138, 221, 0.1);
+    }
+
+    @media (max-width: 640px) {
+      .input-group {
+        grid-template-columns: 1fr;
+      }
+
+      .position-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Monthly DeFi Monitor</h1>
+    <p class="subtitle">Track portfolio health, APYs, and rebalancing needs. Check in monthly (15 min).</p>
+
+    <div class="input-section">
+      <h2 style="font-size: 16px; margin-bottom: 1rem; color: #1a1a1a;">Portfolio Overview</h2>
+      <div class="input-group">
+        <div>
+          <label class="input-label">Report Month</label>
+          <input type="month" id="month" value="">
+        </div>
+        <div>
+          <label class="input-label">Total Portfolio Value ($)</label>
+          <input type="number" id="totalValue" placeholder="e.g., 7500" step="0.01">
+        </div>
+        <div>
+          <label class="input-label">Starting Value This Month ($)</label>
+          <input type="number" id="startValue" placeholder="e.g., 7400" step="0.01">
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Position Updates</div>
+    <p style="color: #666; margin-bottom: 1rem; font-size: 14px;">Log current values for each position</p>
+
+    <div id="positionsList"></div>
+    <button onclick="addPosition()" style="margin-bottom: 2rem;">+ Add Position</button>
+
+    <div class="section-title">Portfolio Metrics</div>
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-label">Month Gain/Loss</div>
+        <div class="metric-value" id="monthGain">$0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Blended APY</div>
+        <div class="metric-value" id="blendedApy">0%</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Avg Gas Paid</div>
+        <div class="metric-value" id="avgGas">$0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Largest Position</div>
+        <div class="metric-value" id="largestPos">0%</div>
+      </div>
+    </div>
+
+    <div class="section-title">Monthly Checklist</div>
+    <div class="checklist">
+      <div class="checklist-item">
+        <input type="checkbox" id="check1">
+        <div>
+          <label class="checklist-label" for="check1">All positions value logged</label>
+          <div class="checklist-description">Updated current market values</div>
+        </div>
+      </div>
+      <div class="checklist-item">
+        <input type="checkbox" id="check2">
+        <div>
+          <label class="checklist-label" for="check2">APY rates checked</label>
+          <div class="checklist-description">Verified on defillama.com or protocol dashboard</div>
+        </div>
+      </div>
+      <div class="checklist-item">
+        <input type="checkbox" id="check3">
+        <div>
+          <label class="checklist-label" for="check3">Gas fees recorded</label>
+          <div class="checklist-description">All transactions logged for tax purposes</div>
+        </div>
+      </div>
+      <div class="checklist-item">
+        <input type="checkbox" id="check4">
+        <div>
+          <label class="checklist-label" for="check4">Protocol news reviewed</label>
+          <div class="checklist-description">Check Twitter/Discord for critical updates</div>
+        </div>
+      </div>
+      <div class="checklist-item">
+        <input type="checkbox" id="check5">
+        <div>
+          <label class="checklist-label" for="check5">No liquidation warnings</label>
+          <div class="checklist-description">All positions are safe (no forced sells)</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="alerts"></div>
+
+    <div class="section-title">Rebalancing Status</div>
+    <div id="rebalanceStatus"></div>
+
+    <div class="section-title">Notes & Observations</div>
+    <div class="notes">
+      <textarea id="notes" placeholder="Record anything unusual: APY changes, protocol updates, unusual market activity, plan for next month, etc."></textarea>
+    </div>
+
+    <button onclick="saveReport()" style="margin-bottom: 1rem;">Save Report</button>
+    <button onclick="exportReport()" style="background: #999; margin-left: 8px;">Export as CSV</button>
+  </div>
+
+  <script>
+    const defaultPositions = [
+      { name: 'Aave (USDC)', target: 40 },
+      { name: 'Curve (3pool)', target: 30 },
+      { name: 'Lido (stETH)', target: 20 }
+    ];
+
+    function initMonth() {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      document.getElementById('month').value = `${year}-${month}`;
+    }
+
+    function addPosition() {
+      const positionsList = document.getElementById('positionsList');
+      const posCount = positionsList.children.length;
+      const newPosition = document.createElement('div');
+      newPosition.className = 'position-card';
+      newPosition.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <input type="text" placeholder="Position name" class="pos-name" style="flex: 1; margin-right: 12px;">
+          <button onclick="this.parentElement.parentElement.remove(); updateMetrics();" style="background: #dc2626; padding: 6px 12px; font-size: 12px;">Remove</button>
+        </div>
+        <div class="input-group">
+          <div>
+            <label class="input-label">Current Value ($)</label>
+            <input type="number" class="pos-value" placeholder="0" step="0.01" oninput="updateMetrics()">
+          </div>
+          <div>
+            <label class="input-label">Current APY (%)</label>
+            <input type="number" class="pos-apy" placeholder="0" step="0.1" oninput="updateMetrics()">
+          </div>
+          <div>
+            <label class="input-label">Gas Paid This Month ($)</label>
+            <input type="number" class="pos-gas" placeholder="0" step="0.01" oninput="updateMetrics()">
+          </div>
+          <div>
+            <label class="input-label">Target Allocation (%)</label>
+            <input type="number" class="pos-target" placeholder="0" step="1" oninput="updateMetrics()">
+          </div>
+        </div>
+      `;
+      positionsList.appendChild(newPosition);
+    }
+
+    function updateMetrics() {
+      const positions = Array.from(document.querySelectorAll('.position-card')).map(card => ({
+        name: card.querySelector('.pos-name').value,
+        value: parseFloat(card.querySelector('.pos-value').value) || 0,
+        apy: parseFloat(card.querySelector('.pos-apy').value) || 0,
+        gas: parseFloat(card.querySelector('.pos-gas').value) || 0,
+        target: parseFloat(card.querySelector('.pos-target').value) || 0
+      }));
+
+      const totalValue = parseFloat(document.getElementById('totalValue').value) || 0;
+      const startValue = parseFloat(document.getElementById('startValue').value) || 0;
+      const monthGain = totalValue - startValue;
+
+      document.getElementById('monthGain').textContent = '$' + (monthGain >= 0 ? '+' : '') + monthGain.toFixed(2);
+
+      const totalApy = positions.reduce((sum, p) => sum + (p.apy * (p.value / totalValue)), 0);
+      document.getElementById('blendedApy').textContent = totalApy.toFixed(1) + '%';
+
+      const avgGas = positions.length > 0 ? positions.reduce((sum, p) => sum + p.gas, 0) / positions.length : 0;
+      document.getElementById('avgGas').textContent = '$' + avgGas.toFixed(2);
+
+      const largest = positions.length > 0 ? Math.max(...positions.map(p => p.value / totalValue * 100)) : 0;
+      document.getElementById('largestPos').textContent = largest.toFixed(0) + '%';
+
+      updateRebalance(positions, totalValue);
+      updateAlerts(positions, totalValue);
+      renderPositions(positions);
+    }
+
+    function updateRebalance(positions, totalValue) {
+      if (positions.length === 0 || totalValue === 0) {
+        document.getElementById('rebalanceStatus').innerHTML = '<p style="color: #666;">Add positions to see rebalancing status</p>';
+        return;
+      }
+
+      let html = '<div style="display: grid; gap: 12px;">';
+      let needsRebalance = false;
+
+      positions.forEach(p => {
+        const currentAlloc = (p.value / totalValue * 100);
+        const targetAlloc = p.target || 0;
+        const drift = currentAlloc - targetAlloc;
+        const driftAbs = Math.abs(drift);
+
+        if (driftAbs > 5) {
+          needsRebalance = true;
+        }
+
+        const action = drift > 0 ? '↓ Reduce' : '↑ Increase';
+        const actionColor = drift > 0 ? '#d97706' : '#378ADD';
+
+        html += `
+          <div style="padding: 12px; background: #f9f9f9; border-radius: 6px; border-left: 4px solid ${actionColor};">
+            <div style="font-weight: 600; margin-bottom: 6px;">${p.name}</div>
+            <div style="font-size: 13px; color: #666; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+              <div>Current: ${currentAlloc.toFixed(1)}%</div>
+              <div>Target: ${targetAlloc.toFixed(1)}%</div>
+              <div>Drift: ${driftAbs > 0 ? (drift > 0 ? '+' : '') + drift.toFixed(1) : '✓ OK'}%</div>
+              <div style="color: ${actionColor}; font-weight: 500;">${driftAbs > 5 ? action : '✓ Balanced'}</div>
+            </div>
+          </div>
+        `;
+      });
+
+      if (needsRebalance) {
+        html = '<div class="alert-box" style="border-left-color: #d97706;"><div class="alert-title">Rebalancing Needed</div><div class="alert-text">Some positions have drifted >5% from target. Rebalance now.</div></div>' + html;
+      } else {
+        html = '<div class="success-box"><div class="success-title">✓ Balanced</div><div class="success-text">All positions within 5% of target allocation. No action needed.</div></div>' + html;
+      }
+
+      html += '</div>';
+      document.getElementById('rebalanceStatus').innerHTML = html;
+    }
+
+    function updateAlerts(positions, totalValue) {
+      let alerts = '';
+
+      const totalGas = positions.reduce((sum, p) => sum + p.gas, 0);
+      const gasRatio = (totalGas / totalValue * 100);
+      if (gasRatio > 5) {
+        alerts += '<div class="alert-box"><div class="alert-title">⚠ High Gas Costs</div><div class="alert-text">Gas is ' + gasRatio.toFixed(1) + '% of portfolio. Consider moving to Layer 2 or batching transactions.</div></div>';
+      }
+
+      const maxApy = Math.max(...positions.map(p => p.apy));
+      if (maxApy > 100) {
+        alerts += '<div class="alert-box"><div class="alert-title">⚠ Unsustainable Yield</div><div class="alert-text">One position has >' + maxApy + '% APY. Plan exit strategy; likely to collapse.</div></div>';
+      }
+
+      if (positions.length < 3) {
+        alerts += '<div class="alert-box"><div class="alert-title">⚠ Low Diversification</div><div class="alert-text">Only ' + positions.length + ' position(s). Add 2-3 more to reduce risk.</div></div>';
+      }
+
+      document.getElementById('alerts').innerHTML = alerts || '<div class="success-box"><div class="success-title">✓ No Alerts</div><div class="success-text">Portfolio looks healthy. Continue monitoring.</div></div>';
+    }
+
+    function renderPositions(positions) {
+      // Positions already rendered via cards
+    }
+
+    function saveReport() {
+      const month = document.getElementById('month').value;
+      const data = {
+        month,
+        totalValue: document.getElementById('totalValue').value,
+        startValue: document.getElementById('startValue').value,
+        notes: document.getElementById('notes').value,
+        positions: Array.from(document.querySelectorAll('.position-card')).map(card => ({
+          name: card.querySelector('.pos-name').value,
+          value: card.querySelector('.pos-value').value,
+          apy: card.querySelector('.pos-apy').value,
+          gas: card.querySelector('.pos-gas').value,
+          target: card.querySelector('.pos-target').value
+        }))
+      };
+
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `defi-monitor-${month}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      alert('Report saved!');
+    }
+
+    function exportReport() {
+      const month = document.getElementById('month').value;
+      const positions = Array.from(document.querySelectorAll('.position-card')).map(card => ({
+        name: card.querySelector('.pos-name').value,
+        value: card.querySelector('.pos-value').value,
+        apy: card.querySelector('.pos-apy').value,
+        gas: card.querySelector('.pos-gas').value,
+        target: card.querySelector('.pos-target').value
+      }));
+
+      let csv = 'Month,Position,Value,APY,Gas Paid,Target Allocation\n';
+      positions.forEach(p => {
+        csv += `${month},"${p.name}",${p.value},${p.apy},${p.gas},${p.target}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `defi-monitor-${month}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Initialize
+    initMonth();
+    defaultPositions.forEach(() => addPosition());
+    updateMetrics();
+  </script>
+</body>
+</html>

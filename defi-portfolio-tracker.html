@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DeFi Portfolio Tracker</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f9f9f9;
+      color: #1a1a1a;
+      line-height: 1.6;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #0f0f0f;
+        color: #e0e0e0;
+      }
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 0.5rem;
+      color: #1a1a1a;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      h1 {
+        color: #e0e0e0;
+      }
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 2rem;
+      font-size: 14px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .subtitle {
+        color: #999;
+      }
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 2rem 0 1rem;
+      color: #1a1a1a;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .section-title {
+        color: #e0e0e0;
+      }
+    }
+
+    .form-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 1rem;
+    }
+
+    input, select {
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: #fff;
+      color: #1a1a1a;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      input, select {
+        background: #1a1a1a;
+        border-color: #333;
+        color: #e0e0e0;
+      }
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #378ADD;
+      box-shadow: 0 0 0 3px rgba(55, 138, 221, 0.1);
+    }
+
+    button {
+      padding: 10px 16px;
+      background: #378ADD;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-family: inherit;
+    }
+
+    button:hover {
+      background: #2a6ab3;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin: 1rem 0;
+    }
+
+    .metric-card {
+      background: #fff;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .metric-card {
+        background: #1a1a1a;
+        border-color: #333;
+      }
+    }
+
+    .metric-label {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .metric-label {
+        color: #999;
+      }
+    }
+
+    .metric-value {
+      font-size: 24px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .metric-value {
+        color: #e0e0e0;
+      }
+    }
+
+    .metric-unit {
+      font-size: 14px;
+      color: #666;
+      margin-left: 4px;
+      font-weight: 400;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .metric-unit {
+        color: #999;
+      }
+    }
+
+    .position-item {
+      background: #fff;
+      padding: 14px 16px;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .position-item {
+        background: #1a1a1a;
+        border-color: #333;
+      }
+    }
+
+    .position-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .position-name {
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 6px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .position-name {
+        color: #e0e0e0;
+      }
+    }
+
+    .position-details {
+      font-size: 12px;
+      color: #666;
+      word-break: break-word;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .position-details {
+        color: #999;
+      }
+    }
+
+    .position-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .btn-delete {
+      padding: 6px 12px;
+      font-size: 12px;
+      background: #fee;
+      color: #c33;
+      border: 1px solid #faa;
+      cursor: pointer;
+    }
+
+    .btn-delete:hover {
+      background: #fcc;
+      border-color: #c33;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .btn-delete {
+        background: #3a1a1a;
+        border-color: #662222;
+        color: #ff6b6b;
+      }
+
+      .btn-delete:hover {
+        background: #4a2a2a;
+      }
+    }
+
+    .allocation-bar {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      height: 28px;
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      margin: 12px 0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .allocation-bar {
+        background: #1a1a1a;
+        border-color: #333;
+      }
+    }
+
+    .allocation-segment {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: white;
+      transition: opacity 0.2s;
+    }
+
+    .allocation-legend {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 12px;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-color {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+    }
+
+    .risk-summary {
+      background: #fff;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      margin: 1rem 0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .risk-summary {
+        background: #1a1a1a;
+        border-color: #333;
+      }
+    }
+
+    .risk-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 14px;
+      align-items: center;
+    }
+
+    .risk-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .risk-label {
+      color: #666;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .risk-label {
+        color: #999;
+      }
+    }
+
+    .risk-value {
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .risk-value {
+        color: #e0e0e0;
+      }
+    }
+
+    .risk-value.warning {
+      color: #d97706;
+    }
+
+    .risk-value.success {
+      color: #059669;
+    }
+
+    .recommendation {
+      background: #fff;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      margin: 1rem 0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .recommendation {
+        background: #1a1a1a;
+        border-color: #333;
+      }
+    }
+
+    .recommendation-item {
+      margin: 8px 0;
+      color: #1a1a1a;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .recommendation-item {
+        color: #e0e0e0;
+      }
+    }
+
+    .empty-state {
+      color: #999;
+      font-size: 14px;
+      font-style: italic;
+      padding: 1rem 0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .empty-state {
+        color: #666;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        padding: 1rem;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+
+      .position-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .position-actions {
+        width: 100%;
+      }
+
+      .position-actions button {
+        flex: 1;
+      }
+
+      .form-group {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>DeFi Portfolio Tracker</h1>
+    <p class="subtitle">Track your DeFi investments, monitor gas costs, and optimize allocation</p>
+
+    <div class="section-title">Add position</div>
+    <div class="form-group">
+      <select id="protocol">
+        <option>Protocol: Aave</option>
+        <option>Uniswap V3 LP</option>
+        <option>Curve</option>
+        <option>Yearn</option>
+        <option>Lido</option>
+        <option>MakerDAO</option>
+        <option>Compound</option>
+        <option>Custom</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <input type="text" id="token" placeholder="Token (e.g., USDC, ETH)">
+      <input type="number" id="amount" placeholder="Amount" step="0.01" min="0">
+      <input type="number" id="entryPrice" placeholder="Entry price ($)" step="0.01" min="0">
+    </div>
+    <div class="form-group">
+      <input type="number" id="apy" placeholder="APY %" step="0.1" min="0" max="1000">
+      <input type="number" id="gasPaid" placeholder="Gas paid ($)" step="0.01" min="0">
+      <input type="number" id="riskLevel" placeholder="Risk (1-10)" min="1" max="10" step="1">
+    </div>
+    <button onclick="addPosition()" style="grid-column: 1 / -1; width: 100%;">Add position</button>
+
+    <div class="section-title">Portfolio metrics</div>
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-label">Total value</div>
+        <div class="metric-value">$<span id="totalValue">0</span></div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Gas spent</div>
+        <div class="metric-value">$<span id="gasSpent">0</span></div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Avg APY</div>
+        <div class="metric-value"><span id="avgApy">0</span><span class="metric-unit">%</span></div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Risk score</div>
+        <div class="metric-value"><span id="riskScore">0</span><span class="metric-unit">/10</span></div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Positions</div>
+        <div class="metric-value"><span id="posCount">0</span></div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">30-day yield</div>
+        <div class="metric-value">$<span id="monthlyYield">0</span></div>
+      </div>
+    </div>
+
+    <div class="section-title">Capital allocation</div>
+    <div id="allocationContainer"></div>
+
+    <div class="section-title">Positions</div>
+    <div id="positionsList" class="empty-state">No positions yet</div>
+
+    <div class="section-title">Risk analysis</div>
+    <div class="risk-summary">
+      <div class="risk-item">
+        <span class="risk-label">Concentration risk</span>
+        <span class="risk-value" id="concentrationRisk">—</span>
+      </div>
+      <div class="risk-item">
+        <span class="risk-label">Gas efficiency</span>
+        <span class="risk-value" id="gasEfficiency">—</span>
+      </div>
+      <div class="risk-item">
+        <span class="risk-label">Avg position size</span>
+        <span class="risk-value">$<span id="avgPositionSize">0</span></span>
+      </div>
+      <div class="risk-item">
+        <span class="risk-label">Rebalance frequency</span>
+        <span class="risk-value" id="rebalanceFreq">Quarterly</span>
+      </div>
+      <div class="risk-item">
+        <span class="risk-label">Status</span>
+        <span class="risk-value warning" id="alertMsg">Add positions to begin</span>
+      </div>
+    </div>
+
+    <div class="section-title">Recommendations</div>
+    <div class="recommendation">
+      <div id="recommendations" class="empty-state">Start by adding your first position above</div>
+    </div>
+  </div>
+
+  <script>
+    let positions = [];
+
+    function formatNumber(num, decimals = 2) {
+      return Math.round(num * Math.pow(10, decimals)) / Math.pow(10, decimals);
+    }
+
+    function addPosition() {
+      const protocolSelect = document.getElementById('protocol');
+      const protocol = protocolSelect.value.split(': ')[1] || protocolSelect.value;
+      const token = document.getElementById('token').value.trim();
+      const amount = parseFloat(document.getElementById('amount').value) || 0;
+      const entryPrice = parseFloat(document.getElementById('entryPrice').value) || 0;
+      const apy = parseFloat(document.getElementById('apy').value) || 0;
+      const gasPaid = parseFloat(document.getElementById('gasPaid').value) || 0;
+      const riskLevel = parseInt(document.getElementById('riskLevel').value) || 5;
+
+      if (!token || amount === 0 || entryPrice === 0) {
+        alert('Please enter token name, amount, and entry price');
+        return;
+      }
+
+      positions.push({
+        protocol,
+        token,
+        amount: formatNumber(amount),
+        entryPrice: formatNumber(entryPrice),
+        apy: formatNumber(apy),
+        gasPaid: formatNumber(gasPaid),
+        riskLevel,
+        dateAdded: new Date()
+      });
+
+      document.getElementById('token').value = '';
+      document.getElementById('amount').value = '';
+      document.getElementById('entryPrice').value = '';
+      document.getElementById('apy').value = '';
+      document.getElementById('gasPaid').value = '';
+      document.getElementById('riskLevel').value = '5';
+
+      updateMetrics();
+    }
+
+    function deletePosition(index) {
+      positions.splice(index, 1);
+      updateMetrics();
+    }
+
+    function updateMetrics() {
+      if (positions.length === 0) {
+        document.getElementById('totalValue').textContent = '0';
+        document.getElementById('gasSpent').textContent = '0';
+        document.getElementById('avgApy').textContent = '0';
+        document.getElementById('riskScore').textContent = '0';
+        document.getElementById('posCount').textContent = '0';
+        document.getElementById('monthlyYield').textContent = '0';
+        document.getElementById('avgPositionSize').textContent = '0';
+        document.getElementById('positionsList').innerHTML = '<p class="empty-state">No positions yet</p>';
+        document.getElementById('allocationContainer').innerHTML = '';
+        document.getElementById('recommendations').innerHTML = '<p class="empty-state">Start by adding your first position above</p>';
+        document.getElementById('concentrationRisk').textContent = '—';
+        document.getElementById('gasEfficiency').textContent = '—';
+        document.getElementById('alertMsg').textContent = 'Add positions to begin';
+        return;
+      }
+
+      const totalValue = positions.reduce((sum, p) => sum + (p.amount * p.entryPrice), 0);
+      const totalGas = positions.reduce((sum, p) => sum + p.gasPaid, 0);
+      const avgApy = positions.length > 0
+        ? formatNumber(positions.reduce((sum, p) => sum + p.apy, 0) / positions.length)
+        : 0;
+      const avgRisk = Math.round(positions.reduce((sum, p) => sum + p.riskLevel, 0) / positions.length);
+      const monthlyYield = formatNumber(totalValue * avgApy / 100 / 12);
+      const maxAllocation = positions.length > 0
+        ? formatNumber(Math.max(...positions.map(p => (p.amount * p.entryPrice) / totalValue * 100)))
+        : 0;
+      const avgSize = formatNumber(totalValue / positions.length);
+
+      document.getElementById('totalValue').textContent = formatNumber(totalValue).toLocaleString('en-US');
+      document.getElementById('gasSpent').textContent = formatNumber(totalGas).toLocaleString('en-US');
+      document.getElementById('avgApy').textContent = avgApy;
+      document.getElementById('riskScore').textContent = avgRisk;
+      document.getElementById('posCount').textContent = positions.length;
+      document.getElementById('monthlyYield').textContent = formatNumber(monthlyYield).toLocaleString('en-US');
+      document.getElementById('avgPositionSize').textContent = formatNumber(avgSize).toLocaleString('en-US');
+
+      const gasRatio = (totalGas / totalValue * 100);
+      const gasEfficiency = gasRatio < 1 ? 'Excellent' : gasRatio < 2 ? 'Good' : gasRatio < 5 ? 'Fair' : 'Poor';
+      document.getElementById('gasEfficiency').textContent = gasEfficiency;
+
+      const concentration = maxAllocation > 50 ? 'High' : maxAllocation > 30 ? 'Moderate' : 'Low';
+      document.getElementById('concentrationRisk').textContent = concentration;
+
+      let alert = '';
+      if (maxAllocation > 60) alert = '⚠ Largest position > 60%';
+      else if (gasRatio > 5) alert = '⚠ Gas fees eating profits';
+      else if (positions.length === 1) alert = '⚠ Add more to diversify';
+      else alert = '✓ Portfolio balanced';
+      document.getElementById('alertMsg').textContent = alert;
+
+      renderPositions();
+      renderAllocation();
+      renderRecommendations();
+    }
+
+    function renderPositions() {
+      const html = positions.map((p, i) => {
+        const value = p.amount * p.entryPrice;
+        const monthlyEarn = formatNumber(value * p.apy / 100 / 12);
+        return `
+          <div class="position-item">
+            <div class="position-info">
+              <div class="position-name">${p.protocol} • ${p.token}</div>
+              <div class="position-details">
+                ${formatNumber(p.amount)} tokens @ $${formatNumber(p.entryPrice)} = $${formatNumber(value).toLocaleString('en-US')} |
+                ${p.apy}% APY (+$${monthlyEarn}/mo) | Risk: ${p.riskLevel}/10 | Gas: $${p.gasPaid}
+              </div>
+            </div>
+            <div class="position-actions">
+              <button class="btn-delete" onclick="deletePosition(${i})">Remove</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      document.getElementById('positionsList').innerHTML = html;
+    }
+
+    function renderAllocation() {
+      const total = positions.reduce((sum, p) => sum + (p.amount * p.entryPrice), 0);
+      const colors = ['#378ADD', '#639922', '#BA7517', '#D4537E', '#185FA5', '#3B6D11', '#059669', '#d97706'];
+
+      const bars = positions.map((p, i) => {
+        const pct = Math.round((p.amount * p.entryPrice) / total * 1000) / 10;
+        const color = colors[i % colors.length];
+        return `<div class="allocation-segment" style="width: ${pct}%; background: ${color};" title="${p.token} ${pct}%">${pct > 8 ? pct + '%' : ''}</div>`;
+      }).join('');
+
+      const legend = positions.map((p, i) => {
+        const pct = Math.round((p.amount * p.entryPrice) / total * 1000) / 10;
+        const color = colors[i % colors.length];
+        return `
+          <div class="legend-item">
+            <span class="legend-color" style="background: ${color};"></span>
+            <span>${p.token} ${pct}%</span>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('allocationContainer').innerHTML = `
+        <div class="allocation-bar">${bars}</div>
+        <div class="allocation-legend">${legend}</div>
+      `;
+    }
+
+    function renderRecommendations() {
+      const recommendations = [];
+      const totalValue = positions.reduce((sum, p) => sum + (p.amount * p.entryPrice), 0);
+      const totalGas = positions.reduce((sum, p) => sum + p.gasPaid, 0);
+      const gasRatio = (totalGas / totalValue * 100);
+      const maxAlloc = positions.length > 0
+        ? Math.max(...positions.map(p => (p.amount * p.entryPrice) / totalValue))
+        : 0;
+
+      if (positions.length < 3) recommendations.push('• Add 2-3 more positions to reduce concentration risk and diversify');
+      if (gasRatio > 5) recommendations.push('• Move to Layer 2 (Base/Arbitrum) to reduce gas fees significantly');
+      if (maxAlloc > 0.5) recommendations.push('• Rebalance: largest position is ' + Math.round(maxAlloc * 100) + '% of portfolio');
+      if (positions.some(p => p.apy > 100)) recommendations.push('• High-yield positions (>100% APY) are fragile: plan your exit strategy');
+      if (totalValue > 0 && gasRatio < 2 && positions.length > 2) recommendations.push('✓ Gas efficiency is good - minimal overhead');
+      if (recommendations.length === 0) recommendations.push('✓ Portfolio looks well-structured. Monitor quarterly for rebalancing.');
+
+      const html = recommendations.map(r => `<div class="recommendation-item">${r}</div>`).join('');
+      document.getElementById('recommendations').innerHTML = html;
+    }
+
+    updateMetrics();
+  </script>
+</body>
+</html>
