@@ -232,6 +232,47 @@
       display: flex;
       gap: 8px;
       flex-shrink: 0;
+      align-items: center;
+    }
+
+    .price-input {
+      width: 110px;
+      padding: 6px 8px;
+      font-size: 12px;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .btn-secondary {
+      background: #999;
+    }
+
+    .btn-secondary:hover {
+      background: #777;
+    }
+
+    .form-msg {
+      color: #c33;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .form-msg {
+        color: #ff6b6b;
+      }
+    }
+
+    .pnl-up {
+      color: #059669;
+    }
+
+    .pnl-down {
+      color: #dc2626;
     }
 
     .btn-delete {
@@ -440,34 +481,46 @@
 
     <div class="section-title">Add position</div>
     <div class="form-group">
-      <select id="protocol">
-        <option>Protocol: Aave</option>
-        <option>Uniswap V3 LP</option>
-        <option>Curve</option>
-        <option>Yearn</option>
-        <option>Lido</option>
-        <option>MakerDAO</option>
-        <option>Compound</option>
-        <option>Custom</option>
+      <select id="protocol" aria-label="Protocol">
+        <option value="Aave">Aave</option>
+        <option value="Uniswap V3 LP">Uniswap V3 LP</option>
+        <option value="Curve">Curve</option>
+        <option value="Yearn">Yearn</option>
+        <option value="Lido">Lido</option>
+        <option value="Sky/MakerDAO">Sky/MakerDAO</option>
+        <option value="Compound">Compound</option>
+        <option value="Custom">Custom</option>
       </select>
     </div>
     <div class="form-group">
-      <input type="text" id="token" placeholder="Token (e.g., USDC, ETH)">
-      <input type="number" id="amount" placeholder="Amount" step="0.01" min="0">
-      <input type="number" id="entryPrice" placeholder="Entry price ($)" step="0.01" min="0">
+      <input type="text" id="token" placeholder="Token (e.g., USDC, ETH)" aria-label="Token" maxlength="30">
+      <input type="number" id="amount" placeholder="Amount" aria-label="Amount" step="any" min="0">
+      <input type="number" id="entryPrice" placeholder="Entry price ($)" aria-label="Entry price" step="any" min="0">
+      <input type="number" id="currentPrice" placeholder="Current price ($, optional)" aria-label="Current price" step="any" min="0">
     </div>
     <div class="form-group">
-      <input type="number" id="apy" placeholder="APY %" step="0.1" min="0" max="1000">
-      <input type="number" id="gasPaid" placeholder="Gas paid ($)" step="0.01" min="0">
-      <input type="number" id="riskLevel" placeholder="Risk (1-10)" min="1" max="10" step="1">
+      <input type="number" id="apy" placeholder="APY %" aria-label="APY percent" step="0.1" min="0" max="1000">
+      <input type="number" id="gasPaid" placeholder="Gas paid ($)" aria-label="Gas paid" step="0.01" min="0">
+      <input type="number" id="riskLevel" placeholder="Risk (1-10)" aria-label="Risk level 1 to 10" min="1" max="10" step="1">
     </div>
-    <button onclick="addPosition()" style="grid-column: 1 / -1; width: 100%;">Add position</button>
+    <div id="formMsg" class="form-msg" role="alert" style="display: none;"></div>
+    <div class="button-row">
+      <button onclick="addPosition()" style="flex: 1;">Add position</button>
+      <button class="btn-secondary" onclick="exportPositions()">Export</button>
+      <button class="btn-secondary" onclick="document.getElementById('importFile').click()">Import</button>
+      <input type="file" id="importFile" accept="application/json,.json" style="display: none;" onchange="importPositions(this)">
+    </div>
+    <p id="storageNote" class="empty-state" style="display: none;">Browser storage is unavailable, so positions will be lost on refresh. Use Export to keep a copy.</p>
 
     <div class="section-title">Portfolio metrics</div>
     <div class="metric-grid">
       <div class="metric-card">
         <div class="metric-label">Total value</div>
         <div class="metric-value">$<span id="totalValue">0</span></div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Unrealized P/L</div>
+        <div class="metric-value" id="unrealizedPnl">$0.00</div>
       </div>
       <div class="metric-card">
         <div class="metric-label">Gas spent</div>
@@ -528,124 +581,242 @@
   </div>
 
   <script>
+    const STORAGE_KEY = 'defi-tracker-positions-v1';
     let positions = [];
 
-    function formatNumber(num, decimals = 2) {
-      return Math.round(num * Math.pow(10, decimals)) / Math.pow(10, decimals);
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function round2(num) {
+      return Math.round(num * 100) / 100;
+    }
+
+    function money(num) {
+      return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function signedMoney(num) {
+      return (num >= 0 ? '+$' : '-$') + money(Math.abs(num));
+    }
+
+    const valueOf = p => p.amount * p.currentPrice;
+    const costOf = p => p.amount * p.entryPrice;
+
+    // Validates and clamps a position from any source (form, localStorage, imported file).
+    function normalizePosition(raw) {
+      if (!raw || typeof raw !== 'object') return null;
+      const num = v => (typeof v === 'number' ? v : parseFloat(v));
+      const token = String(raw.token ?? '').trim().slice(0, 30);
+      const amount = num(raw.amount);
+      const entryPrice = num(raw.entryPrice);
+      if (!token || !(amount > 0) || !(entryPrice > 0) || !isFinite(amount) || !isFinite(entryPrice)) return null;
+
+      let currentPrice = num(raw.currentPrice);
+      if (!(currentPrice > 0) || !isFinite(currentPrice)) currentPrice = entryPrice;
+      let apy = num(raw.apy);
+      if (!isFinite(apy)) apy = 0;
+      let gasPaid = num(raw.gasPaid);
+      if (!isFinite(gasPaid) || gasPaid < 0) gasPaid = 0;
+      let riskLevel = Math.round(num(raw.riskLevel));
+      if (!isFinite(riskLevel)) riskLevel = 5;
+
+      return {
+        protocol: String(raw.protocol ?? 'Custom').trim().slice(0, 40) || 'Custom',
+        token,
+        amount,
+        entryPrice,
+        currentPrice,
+        apy: Math.min(Math.max(apy, 0), 1000),
+        gasPaid,
+        riskLevel: Math.min(Math.max(riskLevel, 1), 10),
+        dateAdded: typeof raw.dateAdded === 'string' ? raw.dateAdded : new Date().toISOString()
+      };
+    }
+
+    function loadPositions() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) positions = JSON.parse(raw).map(normalizePosition).filter(Boolean);
+      } catch (e) {
+        positions = [];
+      }
+    }
+
+    function savePositions() {
+      const note = document.getElementById('storageNote');
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(positions));
+        note.style.display = 'none';
+      } catch (e) {
+        note.style.display = 'block';
+      }
+    }
+
+    function showMessage(text) {
+      const el = document.getElementById('formMsg');
+      el.textContent = text;
+      el.style.display = text ? 'block' : 'none';
     }
 
     function addPosition() {
-      const protocolSelect = document.getElementById('protocol');
-      const protocol = protocolSelect.value.split(': ')[1] || protocolSelect.value;
-      const token = document.getElementById('token').value.trim();
-      const amount = parseFloat(document.getElementById('amount').value) || 0;
-      const entryPrice = parseFloat(document.getElementById('entryPrice').value) || 0;
-      const apy = parseFloat(document.getElementById('apy').value) || 0;
-      const gasPaid = parseFloat(document.getElementById('gasPaid').value) || 0;
-      const riskLevel = parseInt(document.getElementById('riskLevel').value) || 5;
+      const protocol = document.getElementById('protocol').value;
+      const entryRaw = document.getElementById('entryPrice').value;
+      const currentRaw = document.getElementById('currentPrice').value;
+      const raw = {
+        protocol,
+        token: document.getElementById('token').value,
+        amount: document.getElementById('amount').value,
+        entryPrice: entryRaw,
+        currentPrice: currentRaw === '' ? entryRaw : currentRaw,
+        apy: document.getElementById('apy').value || 0,
+        gasPaid: document.getElementById('gasPaid').value || 0,
+        riskLevel: document.getElementById('riskLevel').value || 5
+      };
 
-      if (!token || amount === 0 || entryPrice === 0) {
-        alert('Please enter token name, amount, and entry price');
+      const position = normalizePosition(raw);
+      if (!position) {
+        showMessage('Enter a token name, and an amount and entry price greater than zero.');
+        return;
+      }
+      const apyIn = parseFloat(raw.apy), riskIn = parseFloat(raw.riskLevel), gasIn = parseFloat(raw.gasPaid);
+      if (apyIn < 0 || apyIn > 1000 || riskIn < 1 || riskIn > 10 || gasIn < 0) {
+        showMessage('APY must be 0-1000, risk 1-10, and gas 0 or more.');
         return;
       }
 
-      positions.push({
-        protocol,
-        token,
-        amount: formatNumber(amount),
-        entryPrice: formatNumber(entryPrice),
-        apy: formatNumber(apy),
-        gasPaid: formatNumber(gasPaid),
-        riskLevel,
-        dateAdded: new Date()
-      });
+      showMessage('');
+      positions.push(position);
 
-      document.getElementById('token').value = '';
-      document.getElementById('amount').value = '';
-      document.getElementById('entryPrice').value = '';
-      document.getElementById('apy').value = '';
-      document.getElementById('gasPaid').value = '';
+      ['token', 'amount', 'entryPrice', 'currentPrice', 'apy', 'gasPaid'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('riskLevel').value = '5';
 
+      savePositions();
       updateMetrics();
     }
 
     function deletePosition(index) {
       positions.splice(index, 1);
+      savePositions();
       updateMetrics();
+    }
+
+    function updateCurrentPrice(index, value) {
+      const price = parseFloat(value);
+      if (price > 0 && isFinite(price) && positions[index]) {
+        positions[index].currentPrice = price;
+        savePositions();
+      }
+      updateMetrics();
+    }
+
+    function exportPositions() {
+      const blob = new Blob([JSON.stringify({ version: 2, positions }, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'defi-positions.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importPositions(input) {
+      const file = input.files && input.files[0];
+      input.value = '';
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(reader.result);
+          const list = Array.isArray(data) ? data : data.positions;
+          if (!Array.isArray(list)) throw new Error('no positions');
+          const imported = list.map(normalizePosition).filter(Boolean);
+          if (!imported.length) throw new Error('none valid');
+          if (positions.length && !confirm('Replace your ' + positions.length + ' current position(s) with ' + imported.length + ' imported?')) return;
+          positions = imported;
+          savePositions();
+          updateMetrics();
+          showMessage('');
+        } catch (e) {
+          showMessage('Could not import that file. Use a file exported from this tracker.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function setText(id, text) {
+      document.getElementById(id).textContent = text;
     }
 
     function updateMetrics() {
       if (positions.length === 0) {
-        document.getElementById('totalValue').textContent = '0';
-        document.getElementById('gasSpent').textContent = '0';
-        document.getElementById('avgApy').textContent = '0';
-        document.getElementById('riskScore').textContent = '0';
-        document.getElementById('posCount').textContent = '0';
-        document.getElementById('monthlyYield').textContent = '0';
-        document.getElementById('avgPositionSize').textContent = '0';
+        ['totalValue', 'gasSpent', 'avgApy', 'riskScore', 'posCount', 'monthlyYield', 'avgPositionSize'].forEach(id => setText(id, '0'));
+        setText('unrealizedPnl', '$0.00');
         document.getElementById('positionsList').innerHTML = '<p class="empty-state">No positions yet</p>';
         document.getElementById('allocationContainer').innerHTML = '';
         document.getElementById('recommendations').innerHTML = '<p class="empty-state">Start by adding your first position above</p>';
-        document.getElementById('concentrationRisk').textContent = '—';
-        document.getElementById('gasEfficiency').textContent = '—';
-        document.getElementById('alertMsg').textContent = 'Add positions to begin';
+        setText('concentrationRisk', '—');
+        setText('gasEfficiency', '—');
+        setText('alertMsg', 'Add positions to begin');
         return;
       }
 
-      const totalValue = positions.reduce((sum, p) => sum + (p.amount * p.entryPrice), 0);
+      const totalValue = positions.reduce((sum, p) => sum + valueOf(p), 0);
+      const totalCost = positions.reduce((sum, p) => sum + costOf(p), 0);
       const totalGas = positions.reduce((sum, p) => sum + p.gasPaid, 0);
-      const avgApy = positions.length > 0
-        ? formatNumber(positions.reduce((sum, p) => sum + p.apy, 0) / positions.length)
-        : 0;
-      const avgRisk = Math.round(positions.reduce((sum, p) => sum + p.riskLevel, 0) / positions.length);
-      const monthlyYield = formatNumber(totalValue * avgApy / 100 / 12);
-      const maxAllocation = positions.length > 0
-        ? formatNumber(Math.max(...positions.map(p => (p.amount * p.entryPrice) / totalValue * 100)))
-        : 0;
-      const avgSize = formatNumber(totalValue / positions.length);
+      // Weighted by position size, so a small high-APY position can't distort the headline numbers
+      const avgApy = positions.reduce((sum, p) => sum + p.apy * valueOf(p), 0) / totalValue;
+      const avgRisk = Math.round(positions.reduce((sum, p) => sum + p.riskLevel * valueOf(p), 0) / totalValue);
+      const monthlyYield = positions.reduce((sum, p) => sum + valueOf(p) * p.apy / 100 / 12, 0);
+      const maxAllocation = Math.max(...positions.map(p => valueOf(p) / totalValue * 100));
+      const avgSize = totalValue / positions.length;
+      const pnl = totalValue - totalCost;
+      const gasRatio = totalGas / totalValue * 100;
 
-      document.getElementById('totalValue').textContent = formatNumber(totalValue).toLocaleString('en-US');
-      document.getElementById('gasSpent').textContent = formatNumber(totalGas).toLocaleString('en-US');
-      document.getElementById('avgApy').textContent = avgApy;
-      document.getElementById('riskScore').textContent = avgRisk;
-      document.getElementById('posCount').textContent = positions.length;
-      document.getElementById('monthlyYield').textContent = formatNumber(monthlyYield).toLocaleString('en-US');
-      document.getElementById('avgPositionSize').textContent = formatNumber(avgSize).toLocaleString('en-US');
+      setText('totalValue', money(totalValue));
+      setText('unrealizedPnl', signedMoney(pnl));
+      document.getElementById('unrealizedPnl').classList.toggle('pnl-up', pnl >= 0);
+      document.getElementById('unrealizedPnl').classList.toggle('pnl-down', pnl < 0);
+      setText('gasSpent', money(totalGas));
+      setText('avgApy', round2(avgApy));
+      setText('riskScore', avgRisk);
+      setText('posCount', positions.length);
+      setText('monthlyYield', money(monthlyYield));
+      setText('avgPositionSize', money(avgSize));
 
-      const gasRatio = (totalGas / totalValue * 100);
-      const gasEfficiency = gasRatio < 1 ? 'Excellent' : gasRatio < 2 ? 'Good' : gasRatio < 5 ? 'Fair' : 'Poor';
-      document.getElementById('gasEfficiency').textContent = gasEfficiency;
+      setText('gasEfficiency', gasRatio < 1 ? 'Excellent' : gasRatio < 2 ? 'Good' : gasRatio < 5 ? 'Fair' : 'Poor');
+      setText('concentrationRisk', maxAllocation > 50 ? 'High' : maxAllocation > 30 ? 'Moderate' : 'Low');
 
-      const concentration = maxAllocation > 50 ? 'High' : maxAllocation > 30 ? 'Moderate' : 'Low';
-      document.getElementById('concentrationRisk').textContent = concentration;
-
-      let alert = '';
-      if (maxAllocation > 60) alert = '⚠ Largest position > 60%';
-      else if (gasRatio > 5) alert = '⚠ Gas fees eating profits';
-      else if (positions.length === 1) alert = '⚠ Add more to diversify';
-      else alert = '✓ Portfolio balanced';
-      document.getElementById('alertMsg').textContent = alert;
+      let status;
+      if (positions.length === 1) status = '⚠ Add more to diversify';
+      else if (maxAllocation > 60) status = '⚠ Largest position > 60%';
+      else if (gasRatio > 5) status = '⚠ Gas fees eating profits';
+      else status = '✓ Portfolio balanced';
+      setText('alertMsg', status);
 
       renderPositions();
-      renderAllocation();
-      renderRecommendations();
+      renderAllocation(totalValue);
+      renderRecommendations(totalValue, gasRatio, maxAllocation / 100);
     }
 
     function renderPositions() {
       const html = positions.map((p, i) => {
-        const value = p.amount * p.entryPrice;
-        const monthlyEarn = formatNumber(value * p.apy / 100 / 12);
+        const value = valueOf(p);
+        const pnl = value - costOf(p);
+        const monthlyEarn = value * p.apy / 100 / 12;
         return `
           <div class="position-item">
             <div class="position-info">
-              <div class="position-name">${p.protocol} • ${p.token}</div>
+              <div class="position-name">${escapeHtml(p.protocol)} • ${escapeHtml(p.token)}</div>
               <div class="position-details">
-                ${formatNumber(p.amount)} tokens @ $${formatNumber(p.entryPrice)} = $${formatNumber(value).toLocaleString('en-US')} |
-                ${p.apy}% APY (+$${monthlyEarn}/mo) | Risk: ${p.riskLevel}/10 | Gas: $${p.gasPaid}
+                ${p.amount} tokens, entry $${money(p.entryPrice)} → now $${money(p.currentPrice)} = $${money(value)}
+                (<span class="${pnl >= 0 ? 'pnl-up' : 'pnl-down'}">${signedMoney(pnl)}</span>) |
+                ${p.apy}% APY (+$${money(monthlyEarn)}/mo) | Risk: ${p.riskLevel}/10 | Gas: $${money(p.gasPaid)}
               </div>
             </div>
             <div class="position-actions">
+              <input type="number" class="price-input" min="0" step="any" value="${p.currentPrice}" aria-label="Current price"
+                     onchange="updateCurrentPrice(${i}, this.value)">
               <button class="btn-delete" onclick="deletePosition(${i})">Remove</button>
             </div>
           </div>
@@ -654,23 +825,21 @@
       document.getElementById('positionsList').innerHTML = html;
     }
 
-    function renderAllocation() {
-      const total = positions.reduce((sum, p) => sum + (p.amount * p.entryPrice), 0);
+    function renderAllocation(total) {
       const colors = ['#378ADD', '#639922', '#BA7517', '#D4537E', '#185FA5', '#3B6D11', '#059669', '#d97706'];
 
+      const pcts = positions.map(p => Math.round(valueOf(p) / total * 1000) / 10);
       const bars = positions.map((p, i) => {
-        const pct = Math.round((p.amount * p.entryPrice) / total * 1000) / 10;
         const color = colors[i % colors.length];
-        return `<div class="allocation-segment" style="width: ${pct}%; background: ${color};" title="${p.token} ${pct}%">${pct > 8 ? pct + '%' : ''}</div>`;
+        return `<div class="allocation-segment" style="width: ${pcts[i]}%; background: ${color};" title="${escapeHtml(p.token)} ${pcts[i]}%">${pcts[i] > 8 ? pcts[i] + '%' : ''}</div>`;
       }).join('');
 
       const legend = positions.map((p, i) => {
-        const pct = Math.round((p.amount * p.entryPrice) / total * 1000) / 10;
         const color = colors[i % colors.length];
         return `
           <div class="legend-item">
             <span class="legend-color" style="background: ${color};"></span>
-            <span>${p.token} ${pct}%</span>
+            <span>${escapeHtml(p.token)} ${pcts[i]}%</span>
           </div>
         `;
       }).join('');
@@ -681,26 +850,21 @@
       `;
     }
 
-    function renderRecommendations() {
+    function renderRecommendations(totalValue, gasRatio, maxAlloc) {
       const recommendations = [];
-      const totalValue = positions.reduce((sum, p) => sum + (p.amount * p.entryPrice), 0);
-      const totalGas = positions.reduce((sum, p) => sum + p.gasPaid, 0);
-      const gasRatio = (totalGas / totalValue * 100);
-      const maxAlloc = positions.length > 0
-        ? Math.max(...positions.map(p => (p.amount * p.entryPrice) / totalValue))
-        : 0;
 
       if (positions.length < 3) recommendations.push('• Add 2-3 more positions to reduce concentration risk and diversify');
-      if (gasRatio > 5) recommendations.push('• Move to Layer 2 (Base/Arbitrum) to reduce gas fees significantly');
+      if (gasRatio > 5) recommendations.push('• Gas is a large share of the portfolio: consider a Layer 2 (Base/Arbitrum) or fewer, larger transactions');
       if (maxAlloc > 0.5) recommendations.push('• Rebalance: largest position is ' + Math.round(maxAlloc * 100) + '% of portfolio');
       if (positions.some(p => p.apy > 100)) recommendations.push('• High-yield positions (>100% APY) are fragile: plan your exit strategy');
-      if (totalValue > 0 && gasRatio < 2 && positions.length > 2) recommendations.push('✓ Gas efficiency is good - minimal overhead');
+      if (gasRatio < 2 && positions.length > 2) recommendations.push('✓ Gas efficiency is good - minimal overhead');
       if (recommendations.length === 0) recommendations.push('✓ Portfolio looks well-structured. Monitor quarterly for rebalancing.');
 
-      const html = recommendations.map(r => `<div class="recommendation-item">${r}</div>`).join('');
-      document.getElementById('recommendations').innerHTML = html;
+      document.getElementById('recommendations').innerHTML =
+        recommendations.map(r => `<div class="recommendation-item">${escapeHtml(r)}</div>`).join('');
     }
 
+    loadPositions();
     updateMetrics();
   </script>
 </body>
