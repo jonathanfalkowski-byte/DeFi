@@ -106,28 +106,6 @@
       }
     }
 
-    .score-badge {
-      display: inline-block;
-      background: #378ADD;
-      color: white;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .score-badge.low {
-      background: #059669;
-    }
-
-    .score-badge.medium {
-      background: #d97706;
-    }
-
-    .score-badge.high {
-      background: #dc2626;
-    }
-
     .checklist-item {
       background: #fff;
       padding: 12px 16px;
@@ -155,12 +133,39 @@
       flex: 1;
     }
 
+    select.answer {
+      padding: 6px 8px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: #fff;
+      color: #1a1a1a;
+      font-size: 13px;
+      font-family: inherit;
+      flex-shrink: 0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      select.answer {
+        background: #1a1a1a;
+        border-color: #333;
+        color: #e0e0e0;
+      }
+    }
+
+    .gate-list {
+      margin-top: 1rem;
+      font-size: 13px;
+    }
+
+    .gate-list ul {
+      margin: 6px 0 0 20px;
+    }
+
     .item-label {
       font-weight: 500;
       color: #1a1a1a;
       display: block;
       margin-bottom: 4px;
-      cursor: pointer;
     }
 
     @media (prefers-color-scheme: dark) {
@@ -387,7 +392,7 @@
 <body>
   <div class="container">
     <h1>DeFi Protocol Evaluation</h1>
-    <p class="subtitle">Assess whether a protocol is safe to invest in. Answer honestly for accurate results.</p>
+    <p class="subtitle">A structured checklist for researching a protocol. It is not a recommendation and cannot catch every risk. Answer Yes, No, or leave Unknown. Unknown is not the same as Yes: unanswered critical items cap the verdict.</p>
 
     <div class="protocol-input">
       <input type="text" id="protocolName" placeholder="Protocol name (e.g., Aave, Curve)">
@@ -397,179 +402,179 @@
     <div class="section">
       <div class="section-title">Safety & Track Record</div>
 
-      <label class="checklist-item">
-        <input type="checkbox" data-section="safety" data-weight="3">
+      <div class="checklist-item">
+        <select class="answer" data-section="safety" data-weight="3" aria-label="Answer"><option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select>
         <div class="item-content">
           <span class="item-label">Protocol has been live for 2+ years</span>
           <span class="item-description">Protocols that survive bear markets have proven resilience</span>
-          <span class="item-weight">Weight: 3x (Critical)</span>
+          <span class="item-weight">Weight: 3x (Critical: must be Yes)</span>
         </div>
-      </label>
+      </div>
 
-      <label class="checklist-item">
-        <input type="checkbox" data-section="safety" data-weight="3">
+      <div class="checklist-item">
+        <select class="answer" data-section="safety" data-weight="3" aria-label="Answer"><option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select>
         <div class="item-content">
           <span class="item-label">Protocol has been audited by major firms</span>
           <span class="item-description">Look for OpenZeppelin, Trail of Bits, ConsenSys, or Certora audits</span>
-          <span class="item-weight">Weight: 3x (Critical)</span>
+          <span class="item-weight">Weight: 3x (Critical: must be Yes)</span>
         </div>
-      </label>
+      </div>
 
-      <label class="checklist-item">
-        <input type="checkbox" data-section="safety" data-weight="3">
+      <div class="checklist-item">
+        <select class="answer" data-section="safety" data-weight="3" aria-label="Answer"><option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select>
         <div class="item-content">
           <span class="item-label">No major hacks or exploits in past 2 years</span>
-          <span class="item-description">Check DeFi Pulse and Rekt.news for incident history</span>
-          <span class="item-weight">Weight: 3x (Critical)</span>
+          <span class="item-description">Check rekt.news and DefiLlama's hacks dashboard for incident history</span>
+          <span class="item-weight">Weight: 3x (Critical: must be Yes)</span>
         </div>
-      </label>
+      </div>
 
-      <label class="checklist-item">
-        <input type="checkbox" data-section="safety" data-weight="2">
+      <div class="checklist-item">
+        <select class="answer" data-section="safety" data-weight="2" aria-label="Answer"><option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select>
         <div class="item-content">
           <span class="item-label">Team has shipped products before</span>
           <span class="item-description">Not their first rodeo; prior successful projects</span>
           <span class="item-weight">Weight: 2x (High)</span>
         </div>
-      </label>
+      </div>
 
-      <label class="checklist-item">
-        <input type="checkbox" data-section="safety" data-weight="2">
+      <div class="checklist-item">
+        <select class="answer" data-section="safety" data-weight="1" aria-label="Answer"><option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select>
         <div class="item-content">
           <span class="item-label">Protocol has institutional backing</span>
-          <span class="item-description">Funded by reputable VCs (Paradigm, a16z, Sequoia, etc.)</span>
-          <span class="item-weight">Weight: 2x (High)</span>
+          <span class="item-description">Funded by reputable VCs. Weak signal on its own: well-funded projects have still failed</span>
+          <span class="item-weight">Weight: 1x (Medium)</span>
         </div>
-      </label>
+      </div>
     </div>
 
     <div class="section">
       <div class="section-title">Economics & Sustainability</div>
 
-      <label class="checklist-item">
-        <input type="checkbox" data-section="economics" data-weight="3">
+      <div class="checklist-item">
+        <select class="answer" data-section="economics" data-weight="3" aria-label="Answer"><option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select>
         <div class="item-content">
           <span class="item-label">APY is between 2-20% (not >100%)</span>
           <span class="item-description">High yields signal unsustainable incentive structure</span>
-          <span class="item-weight">Weight: 3x (Critical)</span>
+          <span class="item-weight">Weight: 3x (Critical: must be Yes)</span>
         </div>
-      </label>
+      </div>
 
-      <label class="checklist-item">
-        <input type="checkbox" data-section="economics" data-weight="2">
+      <div class="checklist-item">
+        <select class="answer" data-section="economics" data-weight="2" aria-label="Answer"><option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select>
         <div class="item-content">
           <span class="item-label">Protocol profits from transaction fees (not just token emissions)</span>
           <span class="item-description">Protocol should generate revenue independently</span>
           <span class="item-weight">Weight: 2x (High)</span>
         </div>
-      </label>
+      </div>
 
-      <label class="checklist-item">
-        <input type="checkbox" data-section="economics" data-weight="2">
+      <div class="checklist-item">
+        <select class="answer" data-section="economics" data-weight="2" aria-label="Answer"><option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select>
         <div class="item-content">
           <span class="item-label">TVL (Total Value Locked) has been stable or growing</span>
           <span class="item-description">Declining TVL = users leaving = red flag</span>
           <span class="item-weight">Weight: 2x (High)</span>
         </div>
-      </label>
+      </div>
 
-      <label class="checklist-item">
-        <input type="checkbox" data-section="economics" data-weight="2">
+      <div class="checklist-item">
+        <select class="answer" data-section="economics" data-weight="2" aria-label="Answer"><option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select>
         <div class="item-content">
           <span class="item-label">Token emissions are decreasing or have ended</span>
           <span class="item-description">Infinite token printing = price collapse (eventually)</span>
           <span class="item-weight">Weight: 2x (High)</span>
         </div>
-      </label>
+      </div>
 
-      <label class="checklist-item">
-        <input type="checkbox" data-section="economics" data-weight="1">
+      <div class="checklist-item">
+        <select class="answer" data-section="economics" data-weight="1" aria-label="Answer"><option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select>
         <div class="item-content">
           <span class="item-label">Protocol is profitable (revenue > token emissions)</span>
           <span class="item-description">Sustainable economics = long-term survival</span>
           <span class="item-weight">Weight: 1x (Medium)</span>
         </div>
-      </label>
+      </div>
     </div>
 
     <div class="section">
       <div class="section-title">Risk Assessment</div>
 
-      <label class="checklist-item">
-        <input type="checkbox" data-section="risk" data-weight="3">
+      <div class="checklist-item">
+        <select class="answer" data-section="risk" data-weight="3" aria-label="Answer"><option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select>
         <div class="item-content">
           <span class="item-label">Smart contract code is well-tested and public</span>
           <span class="item-description">Code should be open source on GitHub; ask for audit reports</span>
-          <span class="item-weight">Weight: 3x (Critical)</span>
+          <span class="item-weight">Weight: 3x (Critical: must be Yes)</span>
         </div>
-      </label>
+      </div>
 
-      <label class="checklist-item">
-        <input type="checkbox" data-section="risk" data-weight="2">
+      <div class="checklist-item">
+        <select class="answer" data-section="risk" data-weight="2" aria-label="Answer"><option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select>
         <div class="item-content">
           <span class="item-label">Protocol has insurance or coverage for hacks</span>
-          <span class="item-description">Nexus Mutual, Balancer, or in-house insurance fund</span>
+          <span class="item-description">Nexus Mutual cover, a protocol safety module, or an in-house insurance fund</span>
           <span class="item-weight">Weight: 2x (High)</span>
         </div>
-      </label>
+      </div>
 
-      <label class="checklist-item">
-        <input type="checkbox" data-section="risk" data-weight="2">
+      <div class="checklist-item">
+        <select class="answer" data-section="risk" data-weight="2" aria-label="Answer"><option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select>
         <div class="item-content">
           <span class="item-label">No excessive leverage or flashloan attack vectors</span>
           <span class="item-description">Liquidation cascade risk should be minimal</span>
           <span class="item-weight">Weight: 2x (High)</span>
         </div>
-      </label>
+      </div>
 
-      <label class="checklist-item">
-        <input type="checkbox" data-section="risk" data-weight="1">
+      <div class="checklist-item">
+        <select class="answer" data-section="risk" data-weight="1" aria-label="Answer"><option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select>
         <div class="item-content">
           <span class="item-label">Team is doxxed (publicly known identities)</span>
           <span class="item-description">Anonymous teams = higher scam risk</span>
           <span class="item-weight">Weight: 1x (Medium)</span>
         </div>
-      </label>
+      </div>
 
-      <label class="checklist-item">
-        <input type="checkbox" data-section="risk" data-weight="1">
+      <div class="checklist-item">
+        <select class="answer" data-section="risk" data-weight="1" aria-label="Answer"><option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select>
         <div class="item-content">
           <span class="item-label">Protocol governance is decentralized (or on roadmap)</span>
           <span class="item-description">Avoid protocols where one person controls everything</span>
           <span class="item-weight">Weight: 1x (Medium)</span>
         </div>
-      </label>
+      </div>
     </div>
 
     <div class="section">
       <div class="section-title">Market Position</div>
 
-      <label class="checklist-item">
-        <input type="checkbox" data-section="market" data-weight="2">
+      <div class="checklist-item">
+        <select class="answer" data-section="market" data-weight="2" aria-label="Answer"><option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select>
         <div class="item-content">
           <span class="item-label">Protocol is #1 or #2 in its category</span>
-          <span class="item-description">Aave (lending), Curve (stablecoin swaps), Lido (staking)</span>
+          <span class="item-description">By TVL and usage in its category, e.g. lending, stablecoin swaps, liquid staking</span>
           <span class="item-weight">Weight: 2x (High)</span>
         </div>
-      </label>
+      </div>
 
-      <label class="checklist-item">
-        <input type="checkbox" data-section="market" data-weight="1">
+      <div class="checklist-item">
+        <select class="answer" data-section="market" data-weight="1" aria-label="Answer"><option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select>
         <div class="item-content">
           <span class="item-label">Protocol token is trading on major exchanges</span>
-          <span class="item-description">Coinbase, Kraken, Binance = legitimacy signal</span>
+          <span class="item-description">Listing on large exchanges is a mild legitimacy signal, not proof of safety</span>
           <span class="item-weight">Weight: 1x (Medium)</span>
         </div>
-      </label>
+      </div>
 
-      <label class="checklist-item">
-        <input type="checkbox" data-section="market" data-weight="1">
+      <div class="checklist-item">
+        <select class="answer" data-section="market" data-weight="1" aria-label="Answer"><option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select>
         <div class="item-content">
           <span class="item-label">Community engagement is active (not hype-driven)</span>
           <span class="item-description">Discord/Twitter should focus on tech, not price speculation</span>
           <span class="item-weight">Weight: 1x (Medium)</span>
         </div>
-      </label>
+      </div>
     </div>
 
     <button onclick="calculateScore()">Calculate Risk Score</button>
@@ -588,86 +593,129 @@
         </div>
         <div class="result-row">
           <span class="result-label">Safety Checks</span>
-          <span class="result-value" id="resultSafety">0/14</span>
+          <span class="result-value" id="result-safety">0/0</span>
         </div>
         <div class="result-row">
           <span class="result-label">Economic Checks</span>
-          <span class="result-value" id="resultEconomics">0/9</span>
+          <span class="result-value" id="result-economics">0/0</span>
         </div>
         <div class="result-row">
           <span class="result-label">Risk Checks</span>
-          <span class="result-value" id="resultRisk">0/9</span>
+          <span class="result-value" id="result-risk">0/0</span>
         </div>
         <div class="result-row">
           <span class="result-label">Market Checks</span>
-          <span class="result-value" id="resultMarket">0/5</span>
+          <span class="result-value" id="result-market">0/0</span>
         </div>
+        <div class="result-row">
+          <span class="result-label">Unanswered items</span>
+          <span class="result-value" id="resultUnknown">0</span>
+        </div>
+        <div id="gates"></div>
         <div id="recommendation"></div>
       </div>
     </div>
   </div>
 
   <script>
+    // Levels, lowest to highest risk-acceptance: a verdict can be capped but never raised by a gate.
+    const LEVELS = ['avoid', 'caution', 'safe'];
+    const SECTIONS = ['safety', 'economics', 'risk', 'market'];
+    const CRITICAL_WEIGHT = 3;
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function capLevel(level, cap) {
+      return LEVELS[Math.min(LEVELS.indexOf(level), LEVELS.indexOf(cap))];
+    }
+
     function calculateScore() {
-      const protocolName = document.getElementById('protocolName').value || 'Unknown Protocol';
-      const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+      const protocolName = document.getElementById('protocolName').value.trim() || 'Unknown Protocol';
+      const tokenName = document.getElementById('tokenName').value.trim();
+      const answers = Array.from(document.querySelectorAll('select.answer'));
 
       let totalWeight = 0;
-      let checkedWeight = 0;
-      const sectionScores = { safety: { checked: 0, total: 0 }, economics: { checked: 0, total: 0 }, risk: { checked: 0, total: 0 }, market: { checked: 0, total: 0 } };
+      let yesWeight = 0;
+      let unanswered = 0;
+      const sectionScores = {};
+      SECTIONS.forEach(s => sectionScores[s] = { yes: 0, total: 0 });
+      const criticalNo = [];
+      const criticalUnknown = [];
 
-      checkboxes.forEach(box => {
-        const weight = parseInt(box.dataset.weight);
-        const section = box.dataset.section;
+      answers.forEach(sel => {
+        const weight = parseInt(sel.dataset.weight, 10);
+        const section = sel.dataset.section;
+        const label = sel.closest('.checklist-item').querySelector('.item-label').textContent;
 
         totalWeight += weight;
         sectionScores[section].total += weight;
 
-        if (box.checked) {
-          checkedWeight += weight;
-          sectionScores[section].checked += weight;
+        if (sel.value === 'yes') {
+          yesWeight += weight;
+          sectionScores[section].yes += weight;
+        } else if (sel.value === '') {
+          unanswered++;
+        }
+
+        if (weight >= CRITICAL_WEIGHT && sel.value !== 'yes') {
+          (sel.value === 'no' ? criticalNo : criticalUnknown).push(label);
         }
       });
 
-      const score = Math.round((checkedWeight / totalWeight) * 100);
+      const score = totalWeight ? Math.round((yesWeight / totalWeight) * 100) : 0;
 
-      document.getElementById('resultName').textContent = protocolName;
+      // Base verdict from the score...
+      let level = score >= 75 ? 'safe' : score >= 60 ? 'caution' : 'avoid';
+      // ...then critical items act as gates that a high score elsewhere can't offset.
+      if (criticalNo.length >= 2) level = capLevel(level, 'avoid');
+      else if (criticalNo.length === 1) level = capLevel(level, 'caution');
+      if (criticalUnknown.length > 0) level = capLevel(level, 'caution');
+
+      const copy = {
+        safe: {
+          cls: 'safe', rec: 'pass', title: '✓ Meets most criteria',
+          text: 'This protocol meets most checklist criteria, and every critical item is confirmed.',
+          recommendation: 'It passes this checklist. That is not a guarantee of safety: read the audits yourself, size the position so a total loss is survivable, and re-check periodically.'
+        },
+        caution: {
+          cls: 'caution', rec: 'caution', title: '⚠ Caution',
+          text: 'Some signals are positive, but there are open risks or unanswered critical questions.',
+          recommendation: 'Resolve the items listed below before committing money. If you proceed anyway, keep the position small enough that losing all of it would not hurt.'
+        },
+        avoid: {
+          cls: 'danger', rec: 'fail', title: '✗ High risk',
+          text: 'This protocol has significant red flags on this checklist.',
+          recommendation: 'This checklist says to skip it. Revisit only if the failed critical items change.'
+        }
+      }[level];
+
+      const displayName = tokenName ? `${protocolName} (${tokenName})` : protocolName;
+      document.getElementById('resultName').textContent = displayName;
       document.getElementById('resultScore').textContent = `${score}/100`;
-      document.getElementById('resultSafety').textContent = `${sectionScores.safety.checked}/${sectionScores.safety.total}`;
-      document.getElementById('resultEconomics').textContent = `${sectionScores.economics.checked}/${sectionScores.economics.total}`;
-      document.getElementById('resultRisk').textContent = `${sectionScores.risk.checked}/${sectionScores.risk.total}`;
-      document.getElementById('resultMarket').textContent = `${sectionScores.market.checked}/${sectionScores.market.total}`;
+      document.getElementById('resultUnknown').textContent = `${unanswered} of ${answers.length}`;
+      SECTIONS.forEach(s => {
+        document.getElementById('result-' + s).textContent = `${sectionScores[s].yes}/${sectionScores[s].total}`;
+      });
 
-      let riskClass = 'safe';
-      let riskTitle = '✓ Safe to Invest';
-      let riskText = 'This protocol meets most safety criteria. Suitable for conservative portfolios.';
-      let recommendation = 'Allocate to this protocol. Monitor quarterly for changes in metrics.';
-      let recClass = 'pass';
-
-      if (score < 60) {
-        riskClass = 'danger';
-        riskTitle = '✗ High Risk - Avoid';
-        riskText = 'This protocol has significant red flags. Do not invest.';
-        recommendation = 'SKIP this protocol. Too many safety issues.';
-        recClass = 'fail';
-      } else if (score < 75) {
-        riskClass = 'caution';
-        riskTitle = '⚠ Moderate Risk - Caution';
-        riskText = 'This protocol has some positive signals but notable risks remain. Use caution.';
-        recommendation = 'Consider only if you understand the specific risks. Start with small position (5-10% of portfolio).';
-        recClass = 'caution';
+      let gateHtml = '';
+      if (criticalNo.length) {
+        gateHtml += `<div class="gate-list"><strong>Critical items answered "No":</strong><ul>${criticalNo.map(l => `<li>${escapeHtml(l)}</li>`).join('')}</ul></div>`;
       }
+      if (criticalUnknown.length) {
+        gateHtml += `<div class="gate-list"><strong>Critical items still unanswered (research these first):</strong><ul>${criticalUnknown.map(l => `<li>${escapeHtml(l)}</li>`).join('')}</ul></div>`;
+      }
+      document.getElementById('gates').innerHTML = gateHtml;
 
-      const riskDiv = document.getElementById('riskLevel');
-      riskDiv.innerHTML = `
-        <div class="risk-level ${riskClass}">
-          <div class="risk-title">${riskTitle}</div>
-          <div class="risk-text">${riskText}</div>
+      document.getElementById('riskLevel').innerHTML = `
+        <div class="risk-level ${copy.cls}">
+          <div class="risk-title">${copy.title}</div>
+          <div class="risk-text">${copy.text}</div>
         </div>
       `;
-
-      const recDiv = document.getElementById('recommendation');
-      recDiv.innerHTML = `<div class="recommendation ${recClass}"><strong>Recommendation:</strong> ${recommendation}</div>`;
+      document.getElementById('recommendation').innerHTML =
+        `<div class="recommendation ${copy.rec}"><strong>Recommendation:</strong> ${copy.recommendation}</div>`;
 
       document.getElementById('results').style.display = 'block';
       document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
@@ -676,7 +724,7 @@
     function resetForm() {
       document.getElementById('protocolName').value = '';
       document.getElementById('tokenName').value = '';
-      document.querySelectorAll('input[type="checkbox"]').forEach(box => box.checked = false);
+      document.querySelectorAll('select.answer').forEach(sel => sel.value = '');
       document.getElementById('results').style.display = 'none';
     }
   </script>
