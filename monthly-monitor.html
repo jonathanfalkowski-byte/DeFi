@@ -130,6 +130,69 @@
       background: #2a6ab3;
     }
 
+    .panel-heading {
+      font-size: 16px;
+      margin-bottom: 1rem;
+      color: #1a1a1a;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .panel-heading {
+        color: #e0e0e0;
+      }
+    }
+
+    .muted-note {
+      color: #666;
+      margin-bottom: 1rem;
+      font-size: 14px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .muted-note {
+        color: #999;
+      }
+    }
+
+    .drift-card {
+      padding: 12px;
+      background: #f9f9f9;
+      color: #1a1a1a;
+      border-radius: 6px;
+      border-left: 4px solid #378ADD;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .drift-card {
+        background: #262626;
+        color: #e0e0e0;
+      }
+    }
+
+    .drift-stats {
+      font-size: 13px;
+      color: #666;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .drift-stats {
+        color: #aaa;
+      }
+    }
+
+    input[readonly] {
+      background: #f0f0f0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      input[readonly] {
+        background: #262626;
+      }
+    }
+
     .section-title {
       font-size: 18px;
       font-weight: 600;
@@ -466,25 +529,29 @@
     <p class="subtitle">Track portfolio health, APYs, and rebalancing needs. Check in monthly (15 min).</p>
 
     <div class="input-section">
-      <h2 style="font-size: 16px; margin-bottom: 1rem; color: #1a1a1a;">Portfolio Overview</h2>
+      <h2 class="panel-heading">Portfolio Overview</h2>
       <div class="input-group">
         <div>
           <label class="input-label">Report Month</label>
           <input type="month" id="month" value="">
         </div>
         <div>
-          <label class="input-label">Total Portfolio Value ($)</label>
-          <input type="number" id="totalValue" placeholder="e.g., 7500" step="0.01">
+          <label class="input-label">Total Portfolio Value ($, auto)</label>
+          <input type="number" id="totalValue" placeholder="Sum of positions" readonly>
         </div>
         <div>
           <label class="input-label">Starting Value This Month ($)</label>
-          <input type="number" id="startValue" placeholder="e.g., 7400" step="0.01">
+          <input type="number" id="startValue" placeholder="e.g., 7400" step="0.01" oninput="updateMetrics()">
+        </div>
+        <div>
+          <label class="input-label">Net Deposits This Month ($)</label>
+          <input type="number" id="netDeposits" placeholder="Deposits minus withdrawals" step="0.01" oninput="updateMetrics()">
         </div>
       </div>
     </div>
 
     <div class="section-title">Position Updates</div>
-    <p style="color: #666; margin-bottom: 1rem; font-size: 14px;">Log current values for each position</p>
+    <p class="muted-note">Log current values for each position. The total above is calculated from these.</p>
 
     <div id="positionsList"></div>
     <button onclick="addPosition()" style="margin-bottom: 2rem;">+ Add Position</button>
@@ -492,7 +559,7 @@
     <div class="section-title">Portfolio Metrics</div>
     <div class="metric-grid">
       <div class="metric-card">
-        <div class="metric-label">Month Gain/Loss</div>
+        <div class="metric-label">Month Gain/Loss (excl. deposits)</div>
         <div class="metric-value" id="monthGain">$0</div>
       </div>
       <div class="metric-card">
@@ -500,7 +567,7 @@
         <div class="metric-value" id="blendedApy">0%</div>
       </div>
       <div class="metric-card">
-        <div class="metric-label">Avg Gas Paid</div>
+        <div class="metric-label">Total Gas Paid</div>
         <div class="metric-value" id="avgGas">$0</div>
       </div>
       <div class="metric-card">
@@ -560,14 +627,21 @@
 
     <button onclick="saveReport()" style="margin-bottom: 1rem;">Save Report</button>
     <button onclick="exportReport()" style="background: #999; margin-left: 8px;">Export as CSV</button>
+    <button onclick="document.getElementById('loadFile').click()" style="background: #999; margin-left: 8px;">Load Saved Report</button>
+    <input type="file" id="loadFile" accept="application/json,.json" style="display: none;" onchange="loadReport(this)">
   </div>
 
   <script>
     const defaultPositions = [
       { name: 'Aave (USDC)', target: 40 },
-      { name: 'Curve (3pool)', target: 30 },
-      { name: 'Lido (stETH)', target: 20 }
+      { name: 'Curve (stablecoin pool)', target: 30 },
+      { name: 'Lido (stETH / wstETH)', target: 20 },
+      { name: 'Cash (USDC)', target: 10 }
     ];
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
 
     function initMonth() {
       const today = new Date();
@@ -576,14 +650,13 @@
       document.getElementById('month').value = `${year}-${month}`;
     }
 
-    function addPosition() {
+    function addPosition(pos) {
       const positionsList = document.getElementById('positionsList');
-      const posCount = positionsList.children.length;
       const newPosition = document.createElement('div');
       newPosition.className = 'position-card';
       newPosition.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-          <input type="text" placeholder="Position name" class="pos-name" style="flex: 1; margin-right: 12px;">
+          <input type="text" placeholder="Position name" class="pos-name" style="flex: 1; margin-right: 12px;" oninput="updateMetrics()">
           <button onclick="this.parentElement.parentElement.remove(); updateMetrics();" style="background: #dc2626; padding: 6px 12px; font-size: 12px;">Remove</button>
         </div>
         <div class="input-group">
@@ -605,44 +678,72 @@
           </div>
         </div>
       `;
+      // Set values via properties (not string interpolation) so saved/loaded text can't inject markup
+      const p = pos || {};
+      newPosition.querySelector('.pos-name').value = p.name || '';
+      newPosition.querySelector('.pos-value').value = p.value ?? '';
+      newPosition.querySelector('.pos-apy').value = p.apy ?? '';
+      newPosition.querySelector('.pos-gas').value = p.gas ?? '';
+      newPosition.querySelector('.pos-target').value = p.target ?? '';
       positionsList.appendChild(newPosition);
     }
 
-    function updateMetrics() {
-      const positions = Array.from(document.querySelectorAll('.position-card')).map(card => ({
+    function readPositions() {
+      return Array.from(document.querySelectorAll('.position-card')).map(card => ({
         name: card.querySelector('.pos-name').value,
         value: parseFloat(card.querySelector('.pos-value').value) || 0,
         apy: parseFloat(card.querySelector('.pos-apy').value) || 0,
         gas: parseFloat(card.querySelector('.pos-gas').value) || 0,
         target: parseFloat(card.querySelector('.pos-target').value) || 0
       }));
+    }
 
-      const totalValue = parseFloat(document.getElementById('totalValue').value) || 0;
+    function readRawPositions() {
+      return Array.from(document.querySelectorAll('.position-card')).map(card => ({
+        name: card.querySelector('.pos-name').value,
+        value: card.querySelector('.pos-value').value,
+        apy: card.querySelector('.pos-apy').value,
+        gas: card.querySelector('.pos-gas').value,
+        target: card.querySelector('.pos-target').value
+      }));
+    }
+
+    function updateMetrics() {
+      const positions = readPositions();
+
+      // Total is always the sum of the positions, so drift and weights can't disagree with it
+      const totalValue = positions.reduce((sum, p) => sum + p.value, 0);
+      document.getElementById('totalValue').value = totalValue ? totalValue.toFixed(2) : '';
+
       const startValue = parseFloat(document.getElementById('startValue').value) || 0;
-      const monthGain = totalValue - startValue;
+      const netDeposits = parseFloat(document.getElementById('netDeposits').value) || 0;
+      // Deposits are not gains, so remove them from the change in value
+      const monthGain = totalValue - startValue - netDeposits;
 
-      document.getElementById('monthGain').textContent = '$' + (monthGain >= 0 ? '+' : '') + monthGain.toFixed(2);
+      document.getElementById('monthGain').textContent = (monthGain >= 0 ? '+$' : '-$') + Math.abs(monthGain).toFixed(2);
 
-      const totalApy = positions.reduce((sum, p) => sum + (p.apy * (p.value / totalValue)), 0);
+      const totalApy = totalValue > 0
+        ? positions.reduce((sum, p) => sum + p.apy * (p.value / totalValue), 0)
+        : 0;
       document.getElementById('blendedApy').textContent = totalApy.toFixed(1) + '%';
 
-      const avgGas = positions.length > 0 ? positions.reduce((sum, p) => sum + p.gas, 0) / positions.length : 0;
-      document.getElementById('avgGas').textContent = '$' + avgGas.toFixed(2);
+      const totalGas = positions.reduce((sum, p) => sum + p.gas, 0);
+      document.getElementById('avgGas').textContent = '$' + totalGas.toFixed(2);
 
-      const largest = positions.length > 0 ? Math.max(...positions.map(p => p.value / totalValue * 100)) : 0;
+      const largest = totalValue > 0 ? Math.max(...positions.map(p => p.value / totalValue * 100)) : 0;
       document.getElementById('largestPos').textContent = largest.toFixed(0) + '%';
 
       updateRebalance(positions, totalValue);
       updateAlerts(positions, totalValue);
-      renderPositions(positions);
     }
 
     function updateRebalance(positions, totalValue) {
       if (positions.length === 0 || totalValue === 0) {
-        document.getElementById('rebalanceStatus').innerHTML = '<p style="color: #666;">Add positions to see rebalancing status</p>';
+        document.getElementById('rebalanceStatus').innerHTML = '<p class="muted-note">Enter position values to see rebalancing status</p>';
         return;
       }
 
+      const targetSum = positions.reduce((sum, p) => sum + p.target, 0);
       let html = '<div style="display: grid; gap: 12px;">';
       let needsRebalance = false;
 
@@ -660,107 +761,134 @@
         const actionColor = drift > 0 ? '#d97706' : '#378ADD';
 
         html += `
-          <div style="padding: 12px; background: #f9f9f9; border-radius: 6px; border-left: 4px solid ${actionColor};">
-            <div style="font-weight: 600; margin-bottom: 6px;">${p.name}</div>
-            <div style="font-size: 13px; color: #666; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+          <div class="drift-card" style="border-left-color: ${actionColor};">
+            <div style="font-weight: 600; margin-bottom: 6px;">${escapeHtml(p.name || 'Unnamed position')}</div>
+            <div class="drift-stats">
               <div>Current: ${currentAlloc.toFixed(1)}%</div>
               <div>Target: ${targetAlloc.toFixed(1)}%</div>
-              <div>Drift: ${driftAbs > 0 ? (drift > 0 ? '+' : '') + drift.toFixed(1) : '✓ OK'}%</div>
+              <div>Drift: ${driftAbs >= 0.05 ? (drift > 0 ? '+' : '') + drift.toFixed(1) + '%' : '✓ OK'}</div>
               <div style="color: ${actionColor}; font-weight: 500;">${driftAbs > 5 ? action : '✓ Balanced'}</div>
             </div>
           </div>
         `;
       });
 
-      if (needsRebalance) {
-        html = '<div class="alert-box" style="border-left-color: #d97706;"><div class="alert-title">Rebalancing Needed</div><div class="alert-text">Some positions have drifted >5% from target. Rebalance now.</div></div>' + html;
+      let banner;
+      if (Math.abs(targetSum - 100) > 0.5) {
+        banner = '<div class="alert-box"><div class="alert-title">Targets don\'t add up to 100%</div><div class="alert-text">Your target allocations sum to ' + targetSum.toFixed(0) + '%. Fix them so the drift numbers mean something.</div></div>';
+      } else if (needsRebalance) {
+        banner = '<div class="alert-box" style="border-left-color: #d97706;"><div class="alert-title">Rebalancing Needed</div><div class="alert-text">Some positions have drifted more than 5 points from target. Rebalance at your next quarterly review, or sooner if the move is large relative to gas costs.</div></div>';
       } else {
-        html = '<div class="success-box"><div class="success-title">✓ Balanced</div><div class="success-text">All positions within 5% of target allocation. No action needed.</div></div>' + html;
+        banner = '<div class="success-box"><div class="success-title">✓ Balanced</div><div class="success-text">All positions within 5 points of target allocation. No action needed.</div></div>';
       }
 
-      html += '</div>';
+      html = banner + html + '</div>';
       document.getElementById('rebalanceStatus').innerHTML = html;
     }
 
     function updateAlerts(positions, totalValue) {
       let alerts = '';
 
-      const totalGas = positions.reduce((sum, p) => sum + p.gas, 0);
-      const gasRatio = (totalGas / totalValue * 100);
-      if (gasRatio > 5) {
-        alerts += '<div class="alert-box"><div class="alert-title">⚠ High Gas Costs</div><div class="alert-text">Gas is ' + gasRatio.toFixed(1) + '% of portfolio. Consider moving to Layer 2 or batching transactions.</div></div>';
+      if (totalValue > 0) {
+        const totalGas = positions.reduce((sum, p) => sum + p.gas, 0);
+        const gasRatio = (totalGas / totalValue * 100);
+        if (gasRatio > 5) {
+          alerts += '<div class="alert-box"><div class="alert-title">⚠ High Gas Costs</div><div class="alert-text">Gas is ' + gasRatio.toFixed(1) + '% of portfolio. Consider moving to Layer 2 or batching transactions.</div></div>';
+        }
       }
 
-      const maxApy = Math.max(...positions.map(p => p.apy));
+      const maxApy = positions.length > 0 ? Math.max(...positions.map(p => p.apy)) : 0;
       if (maxApy > 100) {
-        alerts += '<div class="alert-box"><div class="alert-title">⚠ Unsustainable Yield</div><div class="alert-text">One position has >' + maxApy + '% APY. Plan exit strategy; likely to collapse.</div></div>';
+        alerts += '<div class="alert-box"><div class="alert-title">⚠ Unsustainable Yield</div><div class="alert-text">One position shows more than ' + maxApy + '% APY. Find out why before adding more; yields that high often collapse or reflect hidden risk.</div></div>';
       }
 
       if (positions.length < 3) {
         alerts += '<div class="alert-box"><div class="alert-title">⚠ Low Diversification</div><div class="alert-text">Only ' + positions.length + ' position(s). Add 2-3 more to reduce risk.</div></div>';
       }
 
-      document.getElementById('alerts').innerHTML = alerts || '<div class="success-box"><div class="success-title">✓ No Alerts</div><div class="success-text">Portfolio looks healthy. Continue monitoring.</div></div>';
+      document.getElementById('alerts').innerHTML = alerts || '<div class="success-box"><div class="success-title">✓ No Alerts</div><div class="success-text">Nothing flagged. Keep monitoring.</div></div>';
     }
 
-    function renderPositions(positions) {
-      // Positions already rendered via cards
+    function downloadFile(filename, content, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
     }
 
     function saveReport() {
       const month = document.getElementById('month').value;
       const data = {
+        version: 2,
         month,
-        totalValue: document.getElementById('totalValue').value,
         startValue: document.getElementById('startValue').value,
+        netDeposits: document.getElementById('netDeposits').value,
         notes: document.getElementById('notes').value,
-        positions: Array.from(document.querySelectorAll('.position-card')).map(card => ({
-          name: card.querySelector('.pos-name').value,
-          value: card.querySelector('.pos-value').value,
-          apy: card.querySelector('.pos-apy').value,
-          gas: card.querySelector('.pos-gas').value,
-          target: card.querySelector('.pos-target').value
-        }))
+        checklist: [1, 2, 3, 4, 5].map(i => document.getElementById('check' + i).checked),
+        positions: readRawPositions()
       };
+      downloadFile(`defi-monitor-${month}.json`, JSON.stringify(data, null, 2), 'application/json');
+    }
 
-      const json = JSON.stringify(data, null, 2);
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `defi-monitor-${month}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      alert('Report saved!');
+    function loadReport(input) {
+      const file = input.files && input.files[0];
+      input.value = '';
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        let data;
+        try {
+          data = JSON.parse(reader.result);
+        } catch (e) {
+          alert('Could not read that file: it is not valid JSON.');
+          return;
+        }
+        if (!data || !Array.isArray(data.positions)) {
+          alert('That file does not look like a saved monitor report.');
+          return;
+        }
+
+        document.getElementById('month').value = data.month || '';
+        document.getElementById('startValue').value = data.startValue ?? '';
+        document.getElementById('netDeposits').value = data.netDeposits ?? '';
+        document.getElementById('notes').value = data.notes || '';
+        [1, 2, 3, 4, 5].forEach((n, i) => {
+          document.getElementById('check' + n).checked = !!(data.checklist && data.checklist[i]);
+        });
+
+        document.getElementById('positionsList').innerHTML = '';
+        data.positions.forEach(pos => addPosition(pos));
+        updateMetrics();
+      };
+      reader.readAsText(file);
+    }
+
+    function csvCell(value) {
+      let text = String(value ?? '');
+      // Neutralize spreadsheet formulas, then escape quotes
+      if (/^[=+\-@\t\r]/.test(text)) text = "'" + text;
+      return '"' + text.replace(/"/g, '""') + '"';
     }
 
     function exportReport() {
       const month = document.getElementById('month').value;
-      const positions = Array.from(document.querySelectorAll('.position-card')).map(card => ({
-        name: card.querySelector('.pos-name').value,
-        value: card.querySelector('.pos-value').value,
-        apy: card.querySelector('.pos-apy').value,
-        gas: card.querySelector('.pos-gas').value,
-        target: card.querySelector('.pos-target').value
-      }));
+      const positions = readRawPositions();
 
       let csv = 'Month,Position,Value,APY,Gas Paid,Target Allocation\n';
       positions.forEach(p => {
-        csv += `${month},"${p.name}",${p.value},${p.apy},${p.gas},${p.target}\n`;
+        csv += [month, p.name, p.value, p.apy, p.gas, p.target].map(csvCell).join(',') + '\n';
       });
 
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `defi-monitor-${month}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
+      downloadFile(`defi-monitor-${month}.csv`, csv, 'text/csv');
     }
 
     // Initialize
     initMonth();
-    defaultPositions.forEach(() => addPosition());
+    defaultPositions.forEach(pos => addPosition(pos));
     updateMetrics();
   </script>
 </body>
